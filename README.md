@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ewidencja Pojemników</title>
+    <title>Ewidencja Pojemnik贸w</title>
     <style>
         * {
             margin: 0;
@@ -267,23 +267,23 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Ewidencja Pojemników</h1>
-            <p>System rejestracji wydań i zwrotów</p>
+            <h1>馃摝 Ewidencja Pojemnik贸w</h1>
+            <p>System rejestracji wyda艅 i zwrot贸w</p>
         </div>
 
         <div class="content">
             <!-- Login Screen -->
             <div id="loginScreen">
                 <div class="form-group">
-                    <label for="username">Nazwa użytkownika</label>
-                    <input type="text" id="username" placeholder="Wpisz swoją nazwę">
+                    <label for="username">Nazwa u偶ytkownika</label>
+                    <input type="text" id="username" placeholder="Wpisz swoj膮 nazw臋">
                 </div>
                 <div class="form-group">
-                    <label for="password">Hasło</label>
-                    <input type="password" id="password" placeholder="Wpisz hasło">
+                    <label for="password">Has艂o</label>
+                    <input type="password" id="password" placeholder="Wpisz has艂o">
                 </div>
                 <div id="loginError" class="alert alert-error hidden"></div>
-                <button onclick="login()">Zaloguj się</button>
+                <button onclick="login()">Zaloguj si臋</button>
             </div>
 
             <!-- Main App -->
@@ -399,7 +399,7 @@
     <script>
         // Configuration - WYPE艁NIJ TE DANE
         const CONFIG = {
-            SHEET_URL: 'TUTAJ_WKLEJ_URL_WEB_APP', // URL z Google Apps Script
+            SHEET_URL: 'https://script.google.com/macros/s/AKfycbwahxH85QiIfjXPTcKw7BVtK2CnaMYrrmNHz9zWsfArlfb9WMbVfhA9RQsr3R2d_WSk/exec', // URL z Google Apps Script
             USERS: {
                 'admin': 'haslo123',
                 'jan': 'jan123',
