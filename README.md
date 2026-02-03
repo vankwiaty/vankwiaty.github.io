@@ -267,8 +267,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>馃摝 Ewidencja Pojemnik贸w</h1>
-            <p>System rejestracji wyda艅 i zwrot贸w</p>
+            <h1>Ewidencja Pojemników</h1>
+            <p>System rejestracji wydań i zwrotów</p>
         </div>
 
         <div class="content">
