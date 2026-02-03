@@ -544,7 +544,7 @@
         }
 
         async function submitData() {
-            if (!CONFIG.SHEET_URL || CONFIG.SHEET_URL === 'TUTAJ_WKLEJ_URL_WEB_APP') {
+            if (!CONFIG.SHEET_URL || CONFIG.SHEET_URL === 'https://script.google.com/macros/s/AKfycbwahxH85QiIfjXPTcKw7BVtK2CnaMYrrmNHz9zWsfArlfb9WMbVfhA9RQsr3R2d_WSk/exec') {
                 alert('Skonfiguruj URL arkusza w pliku index.html (zmienna CONFIG.SHEET_URL)');
                 return;
             }
