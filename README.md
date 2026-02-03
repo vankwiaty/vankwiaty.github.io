@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ewidencja Pojemnik贸w</title>
+    <title>Ewidencja Pojemników</title>
     <style>
         * {
             margin: 0;
@@ -267,23 +267,23 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>馃摝 Ewidencja Pojemnik贸w</h1>
-            <p>System rejestracji wyda艅 i zwrot贸w</p>
+            <h1>Ewidencja Pojemników</h1>
+            <p>System rejestracji wydań i zwrotów</p>
         </div>
 
         <div class="content">
             <!-- Login Screen -->
             <div id="loginScreen">
                 <div class="form-group">
-                    <label for="username">Nazwa u偶ytkownika</label>
-                    <input type="text" id="username" placeholder="Wpisz swoj膮 nazw臋">
+                    <label for="username">Nazwa użytkownika</label>
+                    <input type="text" id="username" placeholder="Wpisz swoją nazwę">
                 </div>
                 <div class="form-group">
-                    <label for="password">Has艂o</label>
-                    <input type="password" id="password" placeholder="Wpisz has艂o">
+                    <label for="password">Hasło</label>
+                    <input type="password" id="password" placeholder="Wpisz hasło">
                 </div>
                 <div id="loginError" class="alert alert-error hidden"></div>
-                <button onclick="login()">Zaloguj si臋</button>
+                <button onclick="login()">Zaloguj się</button>
             </div>
 
             <!-- Main App -->
