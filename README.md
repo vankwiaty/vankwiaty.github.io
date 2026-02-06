@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ewidencja Pojemników</title>
+    <title>Ewidencja Pojemnik贸w</title>
     <style>
         * {
             margin: 0;
@@ -267,8 +267,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Ewidencja Pojemników</h1>
-            <p>System rejestracji wydań i zwrotów</p>
+            <h1>馃摝 Ewidencja Pojemnik贸w</h1>
+            <p>System rejestracji wyda艅 i zwrot贸w</p>
         </div>
 
         <div class="content">
@@ -341,13 +341,13 @@
 
                 <!-- Step 3: Returned Items -->
                 <div id="screen3" class="hidden">
-                    <h3 style="margin-bottom: 20px; color: #333;">Zwrot pojemników</h3>
+                    <h3 style="margin-bottom: 20px; color: #333;">Zwrot pojemnik贸w</h3>
                     <div class="form-group">
-                        <label for="returnedContainers">Pojemniki zwrócone</label>
+                        <label for="returnedContainers">Pojemniki zwr贸cone</label>
                         <input type="number" id="returnedContainers" min="0" value="0">
                     </div>
                     <div class="form-group">
-                        <label for="returnedExtensions">Nadstawki zwrócone</label>
+                        <label for="returnedExtensions">Nadstawki zwr贸cone</label>
                         <input type="number" id="returnedExtensions" min="0" value="0">
                     </div>
                     <button onclick="goToStep4()">Dalej</button>
@@ -371,11 +371,11 @@
                             <span class="summary-value" id="summaryIssuedExtensions"></span>
                         </div>
                         <div class="summary-item">
-                            <span class="summary-label">Pojemniki zwrócone:</span>
+                            <span class="summary-label">Pojemniki zwr贸cone:</span>
                             <span class="summary-value" id="summaryReturnedContainers"></span>
                         </div>
                         <div class="summary-item">
-                            <span class="summary-label">Nadstawki zwrócone:</span>
+                            <span class="summary-label">Nadstawki zwr贸cone:</span>
                             <span class="summary-value" id="summaryReturnedExtensions"></span>
                         </div>
                     </div>
@@ -397,12 +397,14 @@
     </div>
 
     <script>
+        // Configuration - WYPE艁NIJ TE DANE
         const CONFIG = {
             SHEET_URL: 'https://script.google.com/macros/s/AKfycbwahxH85QiIfjXPTcKw7BVtK2CnaMYrrmNHz9zWsfArlfb9WMbVfhA9RQsr3R2d_WSk/exec', // URL z Google Apps Script
             USERS: {
                 'admin': 'haslo123',
                 'jan': 'jan123',
                 'anna': 'anna123'
+                // Dodaj wi臋cej u偶ytkownik贸w w formacie 'login': 'haslo'
             }
         };
 
@@ -544,11 +546,6 @@
         }
 
         async function submitData() {
-            if (!CONFIG.SHEET_URL || CONFIG.SHEET_URL === 'https://script.google.com/macros/s/AKfycbwahxH85QiIfjXPTcKw7BVtK2CnaMYrrmNHz9zWsfArlfb9WMbVfhA9RQsr3R2d_WSk/exec') {
-                alert('Skonfiguruj URL arkusza w pliku index.html (zmienna CONFIG.SHEET_URL)');
-                return;
-            }
-
             const submitBtn = document.getElementById('submitBtn');
             const messageDiv = document.getElementById('submitMessage');
             
