@@ -562,7 +562,7 @@
     <script>
         // Configuration
         const CONFIG = {
-            SHEET_URL: 'TUTAJ_WKLEJ_URL_WEB_APP', // URL z Google Apps Script
+            SHEET_URL: 'https://script.google.com/macros/s/AKfycbxPStMbunGAIXYjqAh3WISU1AnvMblRNdI59Bst3C-FSHC1QHEB1PU2UELmbItrEHga/exec', // URL z Google Apps Script
             USERS: {
                 'admin': 'haslo123',
                 'jan': 'jan123',
