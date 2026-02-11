@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ewidencja Pojemnik贸w</title>
+    <title>Ewidencja Pojemników</title>
     <style>
         * {
             margin: 0;
@@ -267,23 +267,23 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>馃摝 Ewidencja Pojemnik贸w</h1>
-            <p>System rejestracji wyda艅 i zwrot贸w</p>
+            <h1>📦 Ewidencja Pojemników</h1>
+            <p>System rejestracji wydań i zwrotów</p>
         </div>
 
         <div class="content">
             <!-- Login Screen -->
             <div id="loginScreen">
                 <div class="form-group">
-                    <label for="username">Nazwa u偶ytkownika</label>
-                    <input type="text" id="username" placeholder="Wpisz swoj膮 nazw臋">
+                    <label for="username">Nazwa użytkownika</label>
+                    <input type="text" id="username" placeholder="Wpisz swoją nazwę">
                 </div>
                 <div class="form-group">
-                    <label for="password">Has艂o</label>
-                    <input type="password" id="password" placeholder="Wpisz has艂o">
+                    <label for="password">Hasło</label>
+                    <input type="password" id="password" placeholder="Wpisz hasło">
                 </div>
                 <div id="loginError" class="alert alert-error hidden"></div>
-                <button onclick="login()">Zaloguj si臋</button>
+                <button onclick="login()">Zaloguj się</button>
             </div>
 
             <!-- Main App -->
@@ -326,7 +326,7 @@
 
                 <!-- Step 2: Issued Items -->
                 <div id="screen2" class="hidden">
-                    <h3 style="margin-bottom: 20px; color: #333;">Wydanie pojemnik贸w</h3>
+                    <h3 style="margin-bottom: 20px; color: #333;">Wydanie pojemników</h3>
                     <div class="form-group">
                         <label for="issuedContainers">Pojemniki wydane</label>
                         <input type="number" id="issuedContainers" min="0" value="0">
@@ -341,13 +341,13 @@
 
                 <!-- Step 3: Returned Items -->
                 <div id="screen3" class="hidden">
-                    <h3 style="margin-bottom: 20px; color: #333;">Zwrot pojemnik贸w</h3>
+                    <h3 style="margin-bottom: 20px; color: #333;">Zwrot pojemników</h3>
                     <div class="form-group">
-                        <label for="returnedContainers">Pojemniki zwr贸cone</label>
+                        <label for="returnedContainers">Pojemniki zwrócone</label>
                         <input type="number" id="returnedContainers" min="0" value="0">
                     </div>
                     <div class="form-group">
-                        <label for="returnedExtensions">Nadstawki zwr贸cone</label>
+                        <label for="returnedExtensions">Nadstawki zwrócone</label>
                         <input type="number" id="returnedExtensions" min="0" value="0">
                     </div>
                     <button onclick="goToStep4()">Dalej</button>
@@ -371,11 +371,11 @@
                             <span class="summary-value" id="summaryIssuedExtensions"></span>
                         </div>
                         <div class="summary-item">
-                            <span class="summary-label">Pojemniki zwr贸cone:</span>
+                            <span class="summary-label">Pojemniki zwrócone:</span>
                             <span class="summary-value" id="summaryReturnedContainers"></span>
                         </div>
                         <div class="summary-item">
-                            <span class="summary-label">Nadstawki zwr贸cone:</span>
+                            <span class="summary-label">Nadstawki zwrócone:</span>
                             <span class="summary-value" id="summaryReturnedExtensions"></span>
                         </div>
                     </div>
@@ -397,14 +397,14 @@
     </div>
 
     <script>
-        // Configuration - WYPE艁NIJ TE DANE
+        // Configuration - WYPEŁNIJ TE DANE
         const CONFIG = {
             SHEET_URL: 'https://script.google.com/macros/s/AKfycbwahxH85QiIfjXPTcKw7BVtK2CnaMYrrmNHz9zWsfArlfb9WMbVfhA9RQsr3R2d_WSk/exec', // URL z Google Apps Script
             USERS: {
                 'admin': 'haslo123',
                 'jan': 'jan123',
                 'anna': 'anna123'
-                // Dodaj wi臋cej u偶ytkownik贸w w formacie 'login': 'haslo'
+                // Dodaj więcej użytkowników w formacie 'login': 'haslo'
             }
         };
 
@@ -448,7 +448,7 @@
             const errorDiv = document.getElementById('loginError');
 
             if (!username || !password) {
-                errorDiv.textContent = 'Wype艂nij wszystkie pola';
+                errorDiv.textContent = 'Wypełnij wszystkie pola';
                 errorDiv.classList.remove('hidden');
                 return;
             }
@@ -459,7 +459,7 @@
                 errorDiv.classList.add('hidden');
                 showMainApp();
             } else {
-                errorDiv.textContent = 'Nieprawid艂owa nazwa u偶ytkownika lub has艂o';
+                errorDiv.textContent = 'Nieprawidłowa nazwa użytkownika lub hasło';
                 errorDiv.classList.remove('hidden');
             }
         }
@@ -562,29 +562,38 @@
                 returnedExtensions: parseInt(document.getElementById('returnedExtensions').value)
             };
 
+            console.log('Wysyłam dane:', data);
+
             try {
                 const response = await fetch(CONFIG.SHEET_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'text/plain',
                     },
                     body: JSON.stringify(data)
                 });
 
-                // no-cors mode doesn't give us response status, so we assume success
-                messageDiv.className = 'alert alert-success';
-                messageDiv.textContent = '鉁?Dane zapisane pomy艣lnie!';
-                messageDiv.classList.remove('hidden');
-                
-                setTimeout(() => {
-                    startOver();
-                }, 2000);
+                console.log('Odpowiedź:', response);
+                const result = await response.text();
+                console.log('Wynik:', result);
+
+                // Sprawdź czy odpowiedź zawiera "success"
+                if (result.includes('success') || response.ok) {
+                    messageDiv.className = 'alert alert-success';
+                    messageDiv.textContent = '✓ Dane zapisane pomyślnie!';
+                    messageDiv.classList.remove('hidden');
+                    
+                    setTimeout(() => {
+                        startOver();
+                    }, 2000);
+                } else {
+                    throw new Error('Nieoczekiwana odpowiedź z serwera');
+                }
 
             } catch (error) {
                 console.error('Error:', error);
                 messageDiv.className = 'alert alert-error';
-                messageDiv.textContent = '鉁?B艂膮d podczas zapisywania. Spr贸buj ponownie.';
+                messageDiv.textContent = '✗ Błąd podczas zapisywania. Spróbuj ponownie.';
                 messageDiv.classList.remove('hidden');
                 showScreen('screen4');
             } finally {
