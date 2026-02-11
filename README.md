@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ewidencja Pojemników</title>
+    <title>System Ewidencji</title>
     <style>
         * {
             margin: 0;
@@ -60,30 +60,24 @@
             font-size: 14px;
         }
 
-        input, select {
+        input, select, textarea {
             width: 100%;
             padding: 12px 15px;
             border: 2px solid #e0e0e0;
             border-radius: 10px;
             font-size: 16px;
             transition: border-color 0.3s;
+            font-family: inherit;
         }
 
-        input:focus, select:focus {
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        input:focus, select:focus, textarea:focus {
             outline: none;
             border-color: #667eea;
-        }
-
-        .number-input {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .number-input input {
-            text-align: center;
-            font-size: 20px;
-            font-weight: 600;
         }
 
         button {
@@ -122,6 +116,58 @@
         .btn-logout {
             background: #dc3545;
             margin-top: 10px;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .menu-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 25px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-align: center;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .menu-card.containers {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .menu-card.sales {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .menu-card.complaints {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+
+        .menu-card-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .menu-card-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .menu-card-desc {
+            font-size: 14px;
+            opacity: 0.9;
         }
 
         .step-indicator {
@@ -262,13 +308,40 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        .back-to-menu {
+            background: #6c757d;
+            margin-top: 15px;
+        }
+
+        .module-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .module-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .module-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .module-desc {
+            font-size: 14px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>Ewidencja Pojemników</h1>
-            <p>System rejestracji wydań i zwrotów</p>
+            <h1>🗂️ System Ewidencji</h1>
+            <p>Pojemniki • Sprzedaż • Reklamacje</p>
         </div>
 
         <div class="content">
@@ -276,56 +349,90 @@
             <div id="loginScreen">
                 <div class="form-group">
                     <label for="username">Nazwa użytkownika</label>
-                    <input type="text" id="username" placeholder="Wpisz swoj膮 nazw臋">
+                    <input type="text" id="username" placeholder="Wpisz swoją nazwę">
                 </div>
                 <div class="form-group">
                     <label for="password">Hasło</label>
-                    <input type="password" id="password" placeholder="Wpisz has艂o">
+                    <input type="password" id="password" placeholder="Wpisz hasło">
                 </div>
                 <div id="loginError" class="alert alert-error hidden"></div>
                 <button onclick="login()">Zaloguj się</button>
             </div>
 
-            <!-- Main App -->
-            <div id="mainApp" class="hidden">
+            <!-- Main Menu -->
+            <div id="mainMenu" class="hidden">
                 <div class="user-info">
                     <span>Zalogowany: <strong id="loggedUser"></strong></span>
                     <button class="btn-logout" onclick="logout()" style="width: auto; padding: 5px 15px; font-size: 14px;">Wyloguj</button>
                 </div>
 
+                <h3 style="text-align: center; margin-bottom: 20px; color: #333;">Wybierz moduł</h3>
+
+                <div class="menu-grid">
+                    <div class="menu-card containers" onclick="openModule('containers')">
+                        <div class="menu-card-icon">📦</div>
+                        <div class="menu-card-title">Pojemniki</div>
+                        <div class="menu-card-desc">Ewidencja wydań i zwrotów</div>
+                    </div>
+
+                    <div class="menu-card sales" onclick="openModule('sales')">
+                        <div class="menu-card-icon">💰</div>
+                        <div class="menu-card-title">Sprzedaż ze stocku</div>
+                        <div class="menu-card-desc">Rejestracja sprzedaży</div>
+                    </div>
+
+                    <div class="menu-card complaints" onclick="openModule('complaints')">
+                        <div class="menu-card-icon">⚠️</div>
+                        <div class="menu-card-title">Reklamacje</div>
+                        <div class="menu-card-desc">Zgłoszenia reklamacyjne</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULE 1: CONTAINERS -->
+            <div id="containersModule" class="hidden">
+                <div class="user-info">
+                    <span><strong id="loggedUserContainers"></strong></span>
+                </div>
+
+                <div class="module-header">
+                    <div class="module-icon">📦</div>
+                    <div class="module-title">Ewidencja Pojemników</div>
+                </div>
+
                 <!-- Step Indicator -->
                 <div class="step-indicator">
-                    <div class="step active" id="step1">
+                    <div class="step active" id="containerStep1">
                         <div class="step-number">1</div>
                         <div class="step-label">Klient</div>
                     </div>
-                    <div class="step" id="step2">
+                    <div class="step" id="containerStep2">
                         <div class="step-number">2</div>
                         <div class="step-label">Wydanie</div>
                     </div>
-                    <div class="step" id="step3">
+                    <div class="step" id="containerStep3">
                         <div class="step-number">3</div>
                         <div class="step-label">Zwrot</div>
                     </div>
-                    <div class="step" id="step4">
+                    <div class="step" id="containerStep4">
                         <div class="step-number">4</div>
                         <div class="step-label">Podsumowanie</div>
                     </div>
                 </div>
 
-                <!-- Step 1: Client Selection -->
-                <div id="screen1">
+                <!-- Container screens -->
+                <div id="containerScreen1">
                     <div class="form-group">
-                        <label for="clientSelect">Wybierz klienta</label>
-                        <select id="clientSelect">
+                        <label for="containerClientSelect">Wybierz klienta</label>
+                        <select id="containerClientSelect">
                             <option value="">-- Wybierz klienta --</option>
                         </select>
                     </div>
-                    <button onclick="goToStep2()">Dalej</button>
+                    <button onclick="containerGoToStep2()">Dalej</button>
+                    <button class="back-to-menu" onclick="backToMenu()">Powrót do menu</button>
                 </div>
 
-                <!-- Step 2: Issued Items -->
-                <div id="screen2" class="hidden">
+                <div id="containerScreen2" class="hidden">
                     <h3 style="margin-bottom: 20px; color: #333;">Wydanie pojemników</h3>
                     <div class="form-group">
                         <label for="issuedContainers">Pojemniki wydane</label>
@@ -335,12 +442,11 @@
                         <label for="issuedExtensions">Nadstawki wydane</label>
                         <input type="number" id="issuedExtensions" min="0" value="0">
                     </div>
-                    <button onclick="goToStep3()">Dalej</button>
-                    <button class="btn-secondary" onclick="goToStep1()">Wstecz</button>
+                    <button onclick="containerGoToStep3()">Dalej</button>
+                    <button class="btn-secondary" onclick="containerGoToStep1()">Wstecz</button>
                 </div>
 
-                <!-- Step 3: Returned Items -->
-                <div id="screen3" class="hidden">
+                <div id="containerScreen3" class="hidden">
                     <h3 style="margin-bottom: 20px; color: #333;">Zwrot pojemników</h3>
                     <div class="form-group">
                         <label for="returnedContainers">Pojemniki zwrócone</label>
@@ -350,12 +456,11 @@
                         <label for="returnedExtensions">Nadstawki zwrócone</label>
                         <input type="number" id="returnedExtensions" min="0" value="0">
                     </div>
-                    <button onclick="goToStep4()">Dalej</button>
-                    <button class="btn-secondary" onclick="goToStep2()">Wstecz</button>
+                    <button onclick="containerGoToStep4()">Dalej</button>
+                    <button class="btn-secondary" onclick="containerGoToStep2()">Wstecz</button>
                 </div>
 
-                <!-- Step 4: Summary -->
-                <div id="screen4" class="hidden">
+                <div id="containerScreen4" class="hidden">
                     <h3 style="margin-bottom: 20px; color: #333;">Podsumowanie</h3>
                     <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
                         <div class="summary-item">
@@ -379,31 +484,89 @@
                             <span class="summary-value" id="summaryReturnedExtensions"></span>
                         </div>
                     </div>
-                    <div id="submitMessage" class="hidden"></div>
-                    <button onclick="submitData()" id="submitBtn">Zapisz do arkusza</button>
-                    <button class="btn-secondary" onclick="goToStep3()">Wstecz</button>
-                    <button class="btn-secondary" onclick="startOver()">Nowy wpis</button>
+                    <div id="containerSubmitMessage" class="hidden"></div>
+                    <button onclick="submitContainerData()" id="containerSubmitBtn">Zapisz do arkusza</button>
+                    <button class="btn-secondary" onclick="containerGoToStep3()">Wstecz</button>
+                    <button class="btn-secondary" onclick="containerStartOver()">Nowy wpis</button>
+                </div>
+            </div>
+
+            <!-- MODULE 2: SALES -->
+            <div id="salesModule" class="hidden">
+                <div class="user-info">
+                    <span><strong id="loggedUserSales"></strong></span>
                 </div>
 
-                <!-- Loading indicator -->
-                <div id="loadingScreen" class="hidden">
-                    <div class="loading">
-                        <div class="spinner"></div>
-                        <p style="margin-top: 15px; color: #666;">Zapisywanie danych...</p>
-                    </div>
+                <div class="module-header">
+                    <div class="module-icon">💰</div>
+                    <div class="module-title">Sprzedaż ze stocku</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="salesClientSelect">Wybierz klienta</label>
+                    <select id="salesClientSelect">
+                        <option value="">-- Wybierz klienta --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="salesDescription">Opis sprzedaży</label>
+                    <textarea id="salesDescription" placeholder="Wpisz szczegóły sprzedaży (produkt, ilość, cena, itp.)"></textarea>
+                </div>
+
+                <div id="salesMessage" class="hidden"></div>
+                
+                <button onclick="submitSalesData()" id="salesSubmitBtn">Zapisz sprzedaż</button>
+                <button class="back-to-menu" onclick="backToMenu()">Powrót do menu</button>
+            </div>
+
+            <!-- MODULE 3: COMPLAINTS -->
+            <div id="complaintsModule" class="hidden">
+                <div class="user-info">
+                    <span><strong id="loggedUserComplaints"></strong></span>
+                </div>
+
+                <div class="module-header">
+                    <div class="module-icon">⚠️</div>
+                    <div class="module-title">Reklamacje</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="complaintsClientSelect">Wybierz klienta</label>
+                    <select id="complaintsClientSelect">
+                        <option value="">-- Wybierz klienta --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="complaintsDescription">Opis reklamacji</label>
+                    <textarea id="complaintsDescription" placeholder="Wpisz szczegóły reklamacji (powód, produkty, itp.)"></textarea>
+                </div>
+
+                <div id="complaintsMessage" class="hidden"></div>
+                
+                <button onclick="submitComplaintsData()" id="complaintsSubmitBtn">Zapisz reklamację</button>
+                <button class="back-to-menu" onclick="backToMenu()">Powrót do menu</button>
+            </div>
+
+            <!-- Loading indicator -->
+            <div id="loadingScreen" class="hidden">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 15px; color: #666;">Zapisywanie danych...</p>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Configuration - WYPE艁NIJ TE DANE
+        // Configuration
         const CONFIG = {
-            SHEET_URL: 'https://script.google.com/macros/s/AKfycbw5m12EQw53XAbq23csE20rg96Bd1cnRrF9mnXPgnrD8v782cbYpWrfNFYSC-_kUHuq/exec', // URL z Google Apps Script
+            SHEET_URL: 'TUTAJ_WKLEJ_URL_WEB_APP', // URL z Google Apps Script
             USERS: {
-                'mikolaj': 'rs3',
-                'tom': 'glc',
-                'anita': 'rav4'
+                'admin': 'haslo123',
+                'jan': 'jan123',
+                'anna': 'anna123'
             }
         };
 
@@ -426,10 +589,11 @@
         };
 
         let currentUser = null;
+        let currentModule = null;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            populateClientSelect();
+            populateClientSelects();
             checkLogin();
         });
 
@@ -437,7 +601,7 @@
             const savedUser = localStorage.getItem('loggedUser');
             if (savedUser) {
                 currentUser = savedUser;
-                showMainApp();
+                showMainMenu();
             }
         }
 
@@ -456,7 +620,7 @@
                 currentUser = username;
                 localStorage.setItem('loggedUser', username);
                 errorDiv.classList.add('hidden');
-                showMainApp();
+                showMainMenu();
             } else {
                 errorDiv.textContent = 'Nieprawidłowa nazwa użytkownika lub hasło';
                 errorDiv.classList.remove('hidden');
@@ -466,57 +630,107 @@
         function logout() {
             localStorage.removeItem('loggedUser');
             currentUser = null;
-            document.getElementById('mainApp').classList.add('hidden');
+            currentModule = null;
+            hideAllScreens();
             document.getElementById('loginScreen').classList.remove('hidden');
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
         }
 
-        function showMainApp() {
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('mainApp').classList.remove('hidden');
+        function showMainMenu() {
+            hideAllScreens();
+            document.getElementById('mainMenu').classList.remove('hidden');
             document.getElementById('loggedUser').textContent = currentUser;
         }
 
-        function populateClientSelect() {
-            const select = document.getElementById('clientSelect');
-            for (const [code, name] of Object.entries(CLIENTS)) {
-                const option = document.createElement('option');
-                option.value = `${code} - ${name}`;
-                option.textContent = `${code} - ${name}`;
-                select.appendChild(option);
+        function populateClientSelects() {
+            const selects = ['containerClientSelect', 'salesClientSelect', 'complaintsClientSelect'];
+            selects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                for (const [code, name] of Object.entries(CLIENTS)) {
+                    const option = document.createElement('option');
+                    option.value = `${code} - ${name}`;
+                    option.textContent = `${code} - ${name}`;
+                    select.appendChild(option);
+                }
+            });
+        }
+
+        function hideAllScreens() {
+            const screens = [
+                'loginScreen', 'mainMenu', 'containersModule', 'salesModule', 
+                'complaintsModule', 'loadingScreen'
+            ];
+            screens.forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+        }
+
+        function openModule(module) {
+            currentModule = module;
+            hideAllScreens();
+            
+            if (module === 'containers') {
+                document.getElementById('containersModule').classList.remove('hidden');
+                document.getElementById('loggedUserContainers').textContent = currentUser;
+                containerGoToStep1();
+            } else if (module === 'sales') {
+                document.getElementById('salesModule').classList.remove('hidden');
+                document.getElementById('loggedUserSales').textContent = currentUser;
+            } else if (module === 'complaints') {
+                document.getElementById('complaintsModule').classList.remove('hidden');
+                document.getElementById('loggedUserComplaints').textContent = currentUser;
             }
         }
 
-        function goToStep1() {
-            updateSteps(1);
-            showScreen('screen1');
+        function backToMenu() {
+            // Reset forms
+            if (currentModule === 'containers') {
+                containerStartOver();
+            } else if (currentModule === 'sales') {
+                document.getElementById('salesClientSelect').value = '';
+                document.getElementById('salesDescription').value = '';
+                document.getElementById('salesMessage').classList.add('hidden');
+            } else if (currentModule === 'complaints') {
+                document.getElementById('complaintsClientSelect').value = '';
+                document.getElementById('complaintsDescription').value = '';
+                document.getElementById('complaintsMessage').classList.add('hidden');
+            }
+            
+            currentModule = null;
+            showMainMenu();
         }
 
-        function goToStep2() {
-            const client = document.getElementById('clientSelect').value;
+        // ===== CONTAINERS MODULE =====
+        function containerGoToStep1() {
+            containerUpdateSteps(1);
+            containerShowScreen('containerScreen1');
+        }
+
+        function containerGoToStep2() {
+            const client = document.getElementById('containerClientSelect').value;
             if (!client) {
                 alert('Wybierz klienta');
                 return;
             }
-            updateSteps(2);
-            showScreen('screen2');
+            containerUpdateSteps(2);
+            containerShowScreen('containerScreen2');
         }
 
-        function goToStep3() {
-            updateSteps(3);
-            showScreen('screen3');
+        function containerGoToStep3() {
+            containerUpdateSteps(3);
+            containerShowScreen('containerScreen3');
         }
 
-        function goToStep4() {
-            updateSteps(4);
-            updateSummary();
-            showScreen('screen4');
+        function containerGoToStep4() {
+            containerUpdateSteps(4);
+            containerUpdateSummary();
+            containerShowScreen('containerScreen4');
         }
 
-        function updateSteps(currentStep) {
+        function containerUpdateSteps(currentStep) {
             for (let i = 1; i <= 4; i++) {
-                const step = document.getElementById(`step${i}`);
+                const step = document.getElementById(`containerStep${i}`);
                 if (i < currentStep) {
                     step.classList.add('completed');
                     step.classList.remove('active');
@@ -529,93 +743,209 @@
             }
         }
 
-        function showScreen(screenId) {
-            ['screen1', 'screen2', 'screen3', 'screen4', 'loadingScreen'].forEach(id => {
+        function containerShowScreen(screenId) {
+            ['containerScreen1', 'containerScreen2', 'containerScreen3', 'containerScreen4'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
             });
             document.getElementById(screenId).classList.remove('hidden');
         }
 
-        function updateSummary() {
-            document.getElementById('summaryClient').textContent = document.getElementById('clientSelect').value;
+        function containerUpdateSummary() {
+            document.getElementById('summaryClient').textContent = document.getElementById('containerClientSelect').value;
             document.getElementById('summaryIssuedContainers').textContent = document.getElementById('issuedContainers').value;
             document.getElementById('summaryIssuedExtensions').textContent = document.getElementById('issuedExtensions').value;
             document.getElementById('summaryReturnedContainers').textContent = document.getElementById('returnedContainers').value;
             document.getElementById('summaryReturnedExtensions').textContent = document.getElementById('returnedExtensions').value;
         }
 
-        async function submitData() {
-            const submitBtn = document.getElementById('submitBtn');
-            const messageDiv = document.getElementById('submitMessage');
+        async function submitContainerData() {
+            const submitBtn = document.getElementById('containerSubmitBtn');
+            const messageDiv = document.getElementById('containerSubmitMessage');
             
             submitBtn.disabled = true;
-            showScreen('loadingScreen');
+            hideAllScreens();
+            document.getElementById('loadingScreen').classList.remove('hidden');
 
-            const data = {
+            const params = new URLSearchParams({
+                module: 'containers',
                 timestamp: new Date().toLocaleString('pl-PL'),
                 user: currentUser,
-                client: document.getElementById('clientSelect').value,
-                issuedContainers: parseInt(document.getElementById('issuedContainers').value),
-                issuedExtensions: parseInt(document.getElementById('issuedExtensions').value),
-                returnedContainers: parseInt(document.getElementById('returnedContainers').value),
-                returnedExtensions: parseInt(document.getElementById('returnedExtensions').value)
-            };
-
-            console.log('Wysy艂am dane:', data);
+                client: document.getElementById('containerClientSelect').value,
+                issuedContainers: document.getElementById('issuedContainers').value,
+                issuedExtensions: document.getElementById('issuedExtensions').value,
+                returnedContainers: document.getElementById('returnedContainers').value,
+                returnedExtensions: document.getElementById('returnedExtensions').value
+            });
 
             try {
-                // Buduj URL z parametrami GET (obej艣cie CORS)
-                const params = new URLSearchParams({
-                    timestamp: data.timestamp,
-                    user: data.user,
-                    client: data.client,
-                    issuedContainers: data.issuedContainers,
-                    issuedExtensions: data.issuedExtensions,
-                    returnedContainers: data.returnedContainers,
-                    returnedExtensions: data.returnedExtensions
-                });
-
-                const response = await fetch(CONFIG.SHEET_URL + '?' + params.toString(), {
+                await fetch(CONFIG.SHEET_URL + '?' + params.toString(), {
                     method: 'GET',
                     redirect: 'follow'
                 });
 
-                console.log('Odpowied藕 otrzymana');
-
-                // Zak艂adamy sukces, bo Google Apps Script przekierowuje
+                document.getElementById('containersModule').classList.remove('hidden');
+                containerShowScreen('containerScreen4');
+                document.getElementById('loadingScreen').classList.add('hidden');
+                
                 messageDiv.className = 'alert alert-success';
-                messageDiv.textContent = 'Dane zapisane pomyślnie!';
+                messageDiv.textContent = '✓ Dane zapisane pomyślnie!';
                 messageDiv.classList.remove('hidden');
                 
                 setTimeout(() => {
-                    startOver();
+                    containerStartOver();
                 }, 2000);
 
             } catch (error) {
                 console.error('Error:', error);
                 
-                // Nawet je艣li jest b艂膮d CORS, dane mog膮 by膰 zapisane
-                // Sprawd藕my w Apps Script Wykonania
+                document.getElementById('containersModule').classList.remove('hidden');
+                containerShowScreen('containerScreen4');
+                document.getElementById('loadingScreen').classList.add('hidden');
+                
                 messageDiv.className = 'alert alert-success';
-                messageDiv.textContent = 'Dane prawdopodobnie zapisane. Sprawdź arkusz aby potwierdzić.';
+                messageDiv.textContent = '✓ Dane prawdopodobnie zapisane. Sprawdź arkusz.';
                 messageDiv.classList.remove('hidden');
                 
                 setTimeout(() => {
-                    startOver();
+                    containerStartOver();
                 }, 3000);
             } finally {
                 submitBtn.disabled = false;
             }
         }
 
-        function startOver() {
-            document.getElementById('clientSelect').value = '';
+        function containerStartOver() {
+            document.getElementById('containerClientSelect').value = '';
             document.getElementById('issuedContainers').value = '0';
             document.getElementById('issuedExtensions').value = '0';
             document.getElementById('returnedContainers').value = '0';
             document.getElementById('returnedExtensions').value = '0';
-            document.getElementById('submitMessage').classList.add('hidden');
-            goToStep1();
+            document.getElementById('containerSubmitMessage').classList.add('hidden');
+            containerGoToStep1();
+        }
+
+        // ===== SALES MODULE =====
+        async function submitSalesData() {
+            const client = document.getElementById('salesClientSelect').value;
+            const description = document.getElementById('salesDescription').value.trim();
+            const messageDiv = document.getElementById('salesMessage');
+            const submitBtn = document.getElementById('salesSubmitBtn');
+
+            if (!client) {
+                alert('Wybierz klienta');
+                return;
+            }
+
+            if (!description) {
+                alert('Wpisz opis sprzedaży');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            hideAllScreens();
+            document.getElementById('loadingScreen').classList.remove('hidden');
+
+            const params = new URLSearchParams({
+                module: 'sales',
+                timestamp: new Date().toLocaleString('pl-PL'),
+                user: currentUser,
+                client: client,
+                description: description
+            });
+
+            try {
+                await fetch(CONFIG.SHEET_URL + '?' + params.toString(), {
+                    method: 'GET',
+                    redirect: 'follow'
+                });
+
+                document.getElementById('salesModule').classList.remove('hidden');
+                document.getElementById('loadingScreen').classList.add('hidden');
+                
+                messageDiv.className = 'alert alert-success';
+                messageDiv.textContent = '✓ Sprzedaż zapisana pomyślnie!';
+                messageDiv.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    document.getElementById('salesClientSelect').value = '';
+                    document.getElementById('salesDescription').value = '';
+                    messageDiv.classList.add('hidden');
+                }, 2000);
+
+            } catch (error) {
+                console.error('Error:', error);
+                
+                document.getElementById('salesModule').classList.remove('hidden');
+                document.getElementById('loadingScreen').classList.add('hidden');
+                
+                messageDiv.className = 'alert alert-success';
+                messageDiv.textContent = '✓ Sprzedaż prawdopodobnie zapisana. Sprawdź arkusz.';
+                messageDiv.classList.remove('hidden');
+            } finally {
+                submitBtn.disabled = false;
+            }
+        }
+
+        // ===== COMPLAINTS MODULE =====
+        async function submitComplaintsData() {
+            const client = document.getElementById('complaintsClientSelect').value;
+            const description = document.getElementById('complaintsDescription').value.trim();
+            const messageDiv = document.getElementById('complaintsMessage');
+            const submitBtn = document.getElementById('complaintsSubmitBtn');
+
+            if (!client) {
+                alert('Wybierz klienta');
+                return;
+            }
+
+            if (!description) {
+                alert('Wpisz opis reklamacji');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            hideAllScreens();
+            document.getElementById('loadingScreen').classList.add('hidden');
+
+            const params = new URLSearchParams({
+                module: 'complaints',
+                timestamp: new Date().toLocaleString('pl-PL'),
+                user: currentUser,
+                client: client,
+                description: description
+            });
+
+            try {
+                await fetch(CONFIG.SHEET_URL + '?' + params.toString(), {
+                    method: 'GET',
+                    redirect: 'follow'
+                });
+
+                document.getElementById('complaintsModule').classList.remove('hidden');
+                document.getElementById('loadingScreen').classList.add('hidden');
+                
+                messageDiv.className = 'alert alert-success';
+                messageDiv.textContent = '✓ Reklamacja zapisana pomyślnie!';
+                messageDiv.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    document.getElementById('complaintsClientSelect').value = '';
+                    document.getElementById('complaintsDescription').value = '';
+                    messageDiv.classList.add('hidden');
+                }, 2000);
+
+            } catch (error) {
+                console.error('Error:', error);
+                
+                document.getElementById('complaintsModule').classList.remove('hidden');
+                document.getElementById('loadingScreen').classList.add('hidden');
+                
+                messageDiv.className = 'alert alert-success';
+                messageDiv.textContent = '✓ Reklamacja prawdopodobnie zapisana. Sprawdź arkusz.';
+                messageDiv.classList.remove('hidden');
+            } finally {
+                submitBtn.disabled = false;
+            }
         }
 
         // Allow Enter key to login
