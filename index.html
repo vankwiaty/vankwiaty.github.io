@@ -475,7 +475,7 @@
 
     <script>
         const CONFIG = {
-            SHEET_URL: 'https://script.google.com/macros/s/AKfycbxPStMbunGAIXYjqAh3WISU1AnvMblRNdI59Bst3C-FSHC1QHEB1PU2UELmbItrEHga/exec',
+            SHEET_URL: 'https://script.google.com/macros/s/AKfycbx4TmVZxZw-IvrutzTJo2H22Ae2Xw0lypQg-l_L3nsc00geazq1eWz2UdqgDfEvUoSM/exec',
             USERS: {
 				'mikolaj': 'rs3',
 				'tom': 'glc',
