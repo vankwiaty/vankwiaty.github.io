@@ -243,6 +243,11 @@
                         <div class="menu-card-title">Reklamacje</div>
                         <div class="menu-card-desc">Zgłoszenia reklamacyjne</div>
                     </div>
+                    <div class="menu-card" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333;" onclick="openModule('notes')">
+                        <div class="menu-card-icon">📝</div>
+                        <div class="menu-card-title">Notatki</div>
+                        <div class="menu-card-desc">Ogólne uwagi i notatki</div>
+                    </div>
                 </div>
             </div>
 
@@ -463,6 +468,30 @@
                 <button class="back-to-menu" onclick="backToMenu()">Powrót do menu</button>
             </div>
 
+            <!-- MODULE 4: NOTES -->
+            <div id="notesModule" class="hidden">
+                <div class="user-info">
+                    <span><strong id="loggedUserNotes"></strong></span>
+                </div>
+                <div class="module-header">
+                    <div class="module-icon">📝</div>
+                    <div class="module-title">Notatki</div>
+                </div>
+                <div class="form-group">
+                    <label for="notesClientSelect">Klient (opcjonalnie)</label>
+                    <select id="notesClientSelect">
+                        <option value="">-- Ogólna notatka (bez klienta) --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="notesDescription">Treść notatki</label>
+                    <textarea id="notesDescription" placeholder="Wpisz notatkę, uwagę, przypomnienie..."></textarea>
+                </div>
+                <div id="notesMessage" class="hidden"></div>
+                <button onclick="submitNotesData()" id="notesSubmitBtn">Zapisz notatkę</button>
+                <button class="back-to-menu" onclick="backToMenu()">Powrót do menu</button>
+            </div>
+
             <!-- Loading indicator -->
             <div id="loadingScreen" class="hidden">
                 <div class="loading">
@@ -475,11 +504,11 @@
 
     <script>
         const CONFIG = {
-            SHEET_URL: 'https://script.google.com/macros/s/AKfycbx4TmVZxZw-IvrutzTJo2H22Ae2Xw0lypQg-l_L3nsc00geazq1eWz2UdqgDfEvUoSM/exec',
+            SHEET_URL: 'https://script.google.com/macros/s/AKfycbyOxMlURePFsIXWAS1XE1N12l6P0IdpVyVc7qzP7SDsNI2gff-nEDK8bBxAG_xX8Jfw/exec',
             USERS: {
-				'mikolaj': 'rs3',
-				'tom': 'glc',
-				'anita': 'rav4'
+                'admin': 'haslo123',
+                'jan': 'jan123',
+                'anna': 'anna123'
             }
         };
 
@@ -542,7 +571,7 @@
         }
 
         function populateClientSelects() {
-            const selects = ['containerClientSelect', 'salesClientSelect', 'complaintsClientSelect', 'balanceClientSelect'];
+            const selects = ['containerClientSelect', 'salesClientSelect', 'complaintsClientSelect', 'balanceClientSelect', 'notesClientSelect'];
             selects.forEach(selectId => {
                 const select = document.getElementById(selectId);
                 if (!select) return;
@@ -556,7 +585,7 @@
         }
 
         function hideAllScreens() {
-            const screens = ['loginScreen', 'mainMenu', 'containersModule', 'salesModule', 'complaintsModule', 'loadingScreen'];
+            const screens = ['loginScreen', 'mainMenu', 'containersModule', 'salesModule', 'complaintsModule', 'notesModule', 'loadingScreen'];
             screens.forEach(id => document.getElementById(id).classList.add('hidden'));
         }
 
@@ -573,6 +602,9 @@
             } else if (module === 'complaints') {
                 document.getElementById('complaintsModule').classList.remove('hidden');
                 document.getElementById('loggedUserComplaints').textContent = currentUser;
+            } else if (module === 'notes') {
+                document.getElementById('notesModule').classList.remove('hidden');
+                document.getElementById('loggedUserNotes').textContent = currentUser;
             }
         }
 
@@ -586,6 +618,10 @@
                 document.getElementById('complaintsClientSelect').value = '';
                 document.getElementById('complaintsDescription').value = '';
                 document.getElementById('complaintsMessage').classList.add('hidden');
+            } else if (currentModule === 'notes') {
+                document.getElementById('notesClientSelect').value = '';
+                document.getElementById('notesDescription').value = '';
+                document.getElementById('notesMessage').classList.add('hidden');
             }
             currentModule = null;
             showMainMenu();
@@ -880,6 +916,45 @@
                 document.getElementById('balanceLoading').classList.add('hidden');
                 document.getElementById('balanceError').textContent = 'Błąd podczas pobierania salda. Sprawdź połączenie.';
                 document.getElementById('balanceError').classList.remove('hidden');
+            }
+        }
+
+        async function submitNotesData() {
+            const client = document.getElementById('notesClientSelect').value;
+            const description = document.getElementById('notesDescription').value.trim();
+            const messageDiv = document.getElementById('notesMessage');
+            const submitBtn = document.getElementById('notesSubmitBtn');
+            if (!description) { alert('Wpisz treść notatki'); return; }
+            submitBtn.disabled = true;
+            hideAllScreens();
+            document.getElementById('loadingScreen').classList.remove('hidden');
+            const params = new URLSearchParams({
+                module: 'notes',
+                timestamp: new Date().toLocaleString('pl-PL'),
+                user: currentUser,
+                client: client || 'Ogólna',
+                description: description
+            });
+            try {
+                await fetch(CONFIG.SHEET_URL + '?' + params.toString(), { method: 'GET', redirect: 'follow' });
+                document.getElementById('notesModule').classList.remove('hidden');
+                document.getElementById('loadingScreen').classList.add('hidden');
+                messageDiv.className = 'alert alert-success';
+                messageDiv.textContent = '✓ Notatka zapisana pomyślnie!';
+                messageDiv.classList.remove('hidden');
+                setTimeout(() => {
+                    document.getElementById('notesClientSelect').value = '';
+                    document.getElementById('notesDescription').value = '';
+                    messageDiv.classList.add('hidden');
+                }, 2000);
+            } catch (error) {
+                document.getElementById('notesModule').classList.remove('hidden');
+                document.getElementById('loadingScreen').classList.add('hidden');
+                messageDiv.className = 'alert alert-success';
+                messageDiv.textContent = '✓ Notatka prawdopodobnie zapisana. Sprawdź arkusz.';
+                messageDiv.classList.remove('hidden');
+            } finally {
+                submitBtn.disabled = false;
             }
         }
 
