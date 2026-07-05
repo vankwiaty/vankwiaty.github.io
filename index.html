@@ -105,6 +105,34 @@
             background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
             color: white;
         }
+        .menu-card.config {
+            background: linear-gradient(135deg, #434343 0%, #000000 100%);
+            color: white;
+        }
+        .client-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        .client-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+        .client-item span { font-weight: 600; color: #333; }
+        .btn-delete {
+            width: auto;
+            padding: 6px 12px;
+            font-size: 14px;
+            background: #dc3545;
+            margin: 0;
+        }
+        .btn-delete:hover { box-shadow: 0 5px 20px rgba(220, 53, 69, 0.4); }
+        .btn-add { margin-top: 10px; }
         .menu-card-icon { font-size: 48px; margin-bottom: 10px; }
         .menu-card-title { font-size: 20px; font-weight: 600; margin-bottom: 5px; }
         .menu-card-desc { font-size: 14px; opacity: 0.9; }
@@ -247,6 +275,11 @@
                         <div class="menu-card-icon">📝</div>
                         <div class="menu-card-title">Notatki</div>
                         <div class="menu-card-desc">Ogólne uwagi i notatki</div>
+                    </div>
+                    <div id="configMenuCard" class="menu-card config hidden" onclick="openModule('config')">
+                        <div class="menu-card-icon">⚙️</div>
+                        <div class="menu-card-title">Konfiguracja</div>
+                        <div class="menu-card-desc">Zarządzanie klientami</div>
                     </div>
                 </div>
             </div>
@@ -492,6 +525,31 @@
                 <button class="back-to-menu" onclick="backToMenu()">Powrót do menu</button>
             </div>
 
+            <!-- MODULE 5: CONFIG (admin only) -->
+            <div id="configModule" class="hidden">
+                <div class="user-info">
+                    <span><strong id="loggedUserConfig"></strong></span>
+                </div>
+                <div class="module-header">
+                    <div class="module-icon">⚙️</div>
+                    <div class="module-title">Konfiguracja klientów</div>
+                </div>
+                <h4 style="margin-bottom: 15px; color: #333;">Dodaj klienta</h4>
+                <div class="form-group">
+                    <label for="newClientCode">Kod klienta</label>
+                    <input type="text" id="newClientCode" placeholder="np. 58A" maxlength="10">
+                </div>
+                <div class="form-group">
+                    <label for="newClientName">Nazwa skrócona</label>
+                    <input type="text" id="newClientName" placeholder="np. ABC" maxlength="20">
+                </div>
+                <div id="configMessage" class="hidden"></div>
+                <button class="btn-add" onclick="addClient()">Dodaj klienta</button>
+                <h4 style="margin: 25px 0 15px; color: #333;">Lista klientów</h4>
+                <div id="clientList" class="client-list"></div>
+                <button class="back-to-menu" onclick="backToMenu()">Powrót do menu</button>
+            </div>
+
             <!-- Loading indicator -->
             <div id="loadingScreen" class="hidden">
                 <div class="loading">
@@ -506,35 +564,64 @@
         const CONFIG = {
             SHEET_URL: 'https://script.google.com/macros/s/AKfycbyOxMlURePFsIXWAS1XE1N12l6P0IdpVyVc7qzP7SDsNI2gff-nEDK8bBxAG_xX8Jfw/exec',
             USERS: {
-                'admin': 'haslo123',
-                'jan': 'jan123',
-                'anna': 'anna123'
+                'admin': 'a15f8ae07675bfb96e084bfb4f52fb2c22091061aae86e0eb76a55f4e52dd74e',
+                'jan': '2e0e339c8d5f9772c21a9111e1269ec004e9d93fa9cdde48c654b59033f20bb5',
+                'anna': '7f92063f461ca1991c0f734dca11d2c98d30e14f08c0e5a7f8e631eca3bc1b52',
+                'tom': 'bf91df79a0c1db76d19817bf00d30631981b7d11bfb85a821e6527e62542c801'
             }
         };
 
-        const CLIENTS = {
+        const DEFAULT_CLIENTS = {
             "58B": "FLO", "58C": "ZKT", "58D": "ALE", "58E": "ARC", "58F": "JEA",
             "58G": "INS", "58H": "ONI", "58J": "LAW", "58K": "SAL", "58L": "MDL",
             "58M": "FLD", "58N": "MON", "58P": "REN", "58Q": "ZYL", "58Z": "ZYL"
         };
 
+        let CLIENTS = {};
         let currentUser = null;
         let currentModule = null;
 
+        async function hashPassword(password) {
+            const data = new TextEncoder().encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            return Array.from(new Uint8Array(hashBuffer))
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join('');
+        }
+
+        function loadClients() {
+            const saved = localStorage.getItem('clients');
+            if (saved) {
+                try {
+                    CLIENTS = JSON.parse(saved);
+                    return;
+                } catch (e) {
+                    console.warn('Nieprawidłowe dane klientów w localStorage, używam domyślnych');
+                }
+            }
+            CLIENTS = { ...DEFAULT_CLIENTS };
+            saveClients();
+        }
+
+        function saveClients() {
+            localStorage.setItem('clients', JSON.stringify(CLIENTS));
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
+            loadClients();
             populateClientSelects();
             checkLogin();
         });
 
         function checkLogin() {
             const savedUser = localStorage.getItem('loggedUser');
-            if (savedUser) {
+            if (savedUser && CONFIG.USERS[savedUser]) {
                 currentUser = savedUser;
                 showMainMenu();
             }
         }
 
-        function login() {
+        async function login() {
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const errorDiv = document.getElementById('loginError');
@@ -543,7 +630,8 @@
                 errorDiv.classList.remove('hidden');
                 return;
             }
-            if (CONFIG.USERS[username] && CONFIG.USERS[username] === password) {
+            const passwordHash = await hashPassword(password);
+            if (CONFIG.USERS[username] && CONFIG.USERS[username] === passwordHash) {
                 currentUser = username;
                 localStorage.setItem('loggedUser', username);
                 errorDiv.classList.add('hidden');
@@ -568,14 +656,24 @@
             hideAllScreens();
             document.getElementById('mainMenu').classList.remove('hidden');
             document.getElementById('loggedUser').textContent = currentUser;
+            const configCard = document.getElementById('configMenuCard');
+            if (currentUser === 'tom') {
+                configCard.classList.remove('hidden');
+            } else {
+                configCard.classList.add('hidden');
+            }
         }
 
         function populateClientSelects() {
             const selects = ['containerClientSelect', 'salesClientSelect', 'complaintsClientSelect', 'balanceClientSelect', 'notesClientSelect'];
+            const sortedClients = Object.entries(CLIENTS).sort((a, b) => a[0].localeCompare(b[0]));
             selects.forEach(selectId => {
                 const select = document.getElementById(selectId);
                 if (!select) return;
-                for (const [code, name] of Object.entries(CLIENTS)) {
+                const placeholder = select.options[0];
+                select.innerHTML = '';
+                select.appendChild(placeholder);
+                for (const [code, name] of sortedClients) {
                     const option = document.createElement('option');
                     option.value = `${code} - ${name}`;
                     option.textContent = `${code} - ${name}`;
@@ -584,8 +682,62 @@
             });
         }
 
+        function renderClientList() {
+            const listDiv = document.getElementById('clientList');
+            listDiv.innerHTML = '';
+            const sortedClients = Object.entries(CLIENTS).sort((a, b) => a[0].localeCompare(b[0]));
+            sortedClients.forEach(([code, name]) => {
+                const item = document.createElement('div');
+                item.className = 'client-item';
+                item.innerHTML = `<span>${code} - ${name}</span>`;
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn-delete';
+                deleteBtn.textContent = 'Usuń';
+                deleteBtn.onclick = () => removeClient(code);
+                item.appendChild(deleteBtn);
+                listDiv.appendChild(item);
+            });
+        }
+
+        function showConfigMessage(text, isError) {
+            const messageDiv = document.getElementById('configMessage');
+            messageDiv.className = isError ? 'alert alert-error' : 'alert alert-success';
+            messageDiv.textContent = text;
+            messageDiv.classList.remove('hidden');
+            setTimeout(() => messageDiv.classList.add('hidden'), 3000);
+        }
+
+        function addClient() {
+            const code = document.getElementById('newClientCode').value.trim().toUpperCase();
+            const name = document.getElementById('newClientName').value.trim().toUpperCase();
+            if (!code || !name) {
+                showConfigMessage('Wypełnij kod i nazwę klienta', true);
+                return;
+            }
+            if (CLIENTS[code]) {
+                showConfigMessage('Klient o tym kodzie już istnieje', true);
+                return;
+            }
+            CLIENTS[code] = name;
+            saveClients();
+            populateClientSelects();
+            renderClientList();
+            document.getElementById('newClientCode').value = '';
+            document.getElementById('newClientName').value = '';
+            showConfigMessage('✓ Klient dodany pomyślnie', false);
+        }
+
+        function removeClient(code) {
+            if (!confirm(`Czy na pewno usunąć klienta ${code} - ${CLIENTS[code]}?`)) return;
+            delete CLIENTS[code];
+            saveClients();
+            populateClientSelects();
+            renderClientList();
+            showConfigMessage('✓ Klient usunięty', false);
+        }
+
         function hideAllScreens() {
-            const screens = ['loginScreen', 'mainMenu', 'containersModule', 'salesModule', 'complaintsModule', 'notesModule', 'loadingScreen'];
+            const screens = ['loginScreen', 'mainMenu', 'containersModule', 'salesModule', 'complaintsModule', 'notesModule', 'configModule', 'loadingScreen'];
             screens.forEach(id => document.getElementById(id).classList.add('hidden'));
         }
 
@@ -605,6 +757,14 @@
             } else if (module === 'notes') {
                 document.getElementById('notesModule').classList.remove('hidden');
                 document.getElementById('loggedUserNotes').textContent = currentUser;
+            } else if (module === 'config') {
+                if (currentUser !== 'tom') {
+                    showMainMenu();
+                    return;
+                }
+                document.getElementById('configModule').classList.remove('hidden');
+                document.getElementById('loggedUserConfig').textContent = currentUser;
+                renderClientList();
             }
         }
 
@@ -622,6 +782,10 @@
                 document.getElementById('notesClientSelect').value = '';
                 document.getElementById('notesDescription').value = '';
                 document.getElementById('notesMessage').classList.add('hidden');
+            } else if (currentModule === 'config') {
+                document.getElementById('newClientCode').value = '';
+                document.getElementById('newClientName').value = '';
+                document.getElementById('configMessage').classList.add('hidden');
             }
             currentModule = null;
             showMainMenu();
