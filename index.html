@@ -579,9 +579,10 @@
             "58M": "FLD", "58N": "MON", "58P": "REN", "58Q": "ZYL", "58Z": "ZYL"
         };
 
-        let CLIENTS = {};
+        let CLIENTS = { ...DEFAULT_CLIENTS };
         let currentUser = null;
         let currentModule = null;
+        let clientsSynced = false;
 
         async function hashPassword(password) {
             const data = new TextEncoder().encode(password);
@@ -591,27 +592,44 @@
                 .join('');
         }
 
-        function loadClients() {
-            const saved = localStorage.getItem('clients');
-            if (saved) {
-                try {
-                    CLIENTS = JSON.parse(saved);
-                    return;
-                } catch (e) {
-                    console.warn('Nieprawidłowe dane klientów w localStorage, używam domyślnych');
-                }
-            }
-            CLIENTS = { ...DEFAULT_CLIENTS };
-            saveClients();
+        async function apiGet(params) {
+            const response = await fetch(CONFIG.SHEET_URL + '?' + new URLSearchParams(params).toString(), {
+                method: 'GET',
+                redirect: 'follow'
+            });
+            return response.json();
         }
 
-        function saveClients() {
-            localStorage.setItem('clients', JSON.stringify(CLIENTS));
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            loadClients();
+        function applyClients(clientsMap) {
+            if (!clientsMap || typeof clientsMap !== 'object') return false;
+            CLIENTS = clientsMap;
+            clientsSynced = true;
             populateClientSelects();
+            if (currentModule === 'config') renderClientList();
+            return true;
+        }
+
+        async function loadClientsFromServer() {
+            try {
+                const result = await apiGet({ module: 'clients', clientsAction: 'list' });
+                if (result.status === 'success' && result.data && result.data.clients) {
+                    applyClients(result.data.clients);
+                    return true;
+                }
+                console.warn('Lista klientów niedostępna na serwerze – używam listy domyślnej. Wdróż google-apps-script/klienci-api.gs.', result);
+            } catch (e) {
+                console.warn('Nie udało się pobrać klientów z serwera', e);
+            }
+            if (!clientsSynced) {
+                CLIENTS = { ...DEFAULT_CLIENTS };
+                populateClientSelects();
+            }
+            clientsSynced = false;
+            return false;
+        }
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadClientsFromServer();
             checkLogin();
         });
 
@@ -664,6 +682,7 @@
             } else {
                 configCard.classList.add('hidden');
             }
+            loadClientsFromServer();
         }
 
         function populateClientSelects() {
@@ -709,7 +728,7 @@
             setTimeout(() => messageDiv.classList.add('hidden'), 3000);
         }
 
-        function addClient() {
+        async function addClient() {
             const code = document.getElementById('newClientCode').value.trim().toUpperCase();
             const name = document.getElementById('newClientName').value.trim().toUpperCase();
             if (!code || !name) {
@@ -720,22 +739,45 @@
                 showConfigMessage('Klient o tym kodzie już istnieje', true);
                 return;
             }
-            CLIENTS[code] = name;
-            saveClients();
-            populateClientSelects();
-            renderClientList();
-            document.getElementById('newClientCode').value = '';
-            document.getElementById('newClientName').value = '';
-            showConfigMessage('✓ Klient dodany pomyślnie', false);
+            try {
+                const result = await apiGet({
+                    module: 'clients',
+                    clientsAction: 'add',
+                    code: code,
+                    name: name,
+                    user: currentUser
+                });
+                if (result.status === 'success' && result.data && result.data.clients) {
+                    applyClients(result.data.clients);
+                    document.getElementById('newClientCode').value = '';
+                    document.getElementById('newClientName').value = '';
+                    showConfigMessage('✓ Klient dodany – widoczny dla wszystkich', false);
+                } else {
+                    showConfigMessage(result.message || 'Błąd dodawania. Wdróż google-apps-script/klienci-api.gs w Apps Script.', true);
+                }
+            } catch (e) {
+                showConfigMessage('Błąd połączenia podczas dodawania klienta', true);
+            }
         }
 
-        function removeClient(code) {
+        async function removeClient(code) {
             if (!confirm(`Czy na pewno usunąć klienta ${code} - ${CLIENTS[code]}?`)) return;
-            delete CLIENTS[code];
-            saveClients();
-            populateClientSelects();
-            renderClientList();
-            showConfigMessage('✓ Klient usunięty', false);
+            try {
+                const result = await apiGet({
+                    module: 'clients',
+                    clientsAction: 'remove',
+                    code: code,
+                    user: currentUser
+                });
+                if (result.status === 'success' && result.data && result.data.clients) {
+                    applyClients(result.data.clients);
+                    showConfigMessage('✓ Klient usunięty – zmiana widoczna dla wszystkich', false);
+                } else {
+                    showConfigMessage(result.message || 'Błąd usuwania. Wdróż google-apps-script/klienci-api.gs w Apps Script.', true);
+                }
+            } catch (e) {
+                showConfigMessage('Błąd połączenia podczas usuwania klienta', true);
+            }
         }
 
         function hideAllScreens() {
@@ -767,6 +809,11 @@
                 document.getElementById('configModule').classList.remove('hidden');
                 document.getElementById('loggedUserConfig').textContent = currentUser;
                 renderClientList();
+                loadClientsFromServer().then(() => {
+                    if (!clientsSynced) {
+                        showConfigMessage('Uwaga: lista klientów nie jest jeszcze współdzielona. Wdróż google-apps-script/klienci-api.gs w Apps Script.', true);
+                    }
+                });
             }
         }
 
