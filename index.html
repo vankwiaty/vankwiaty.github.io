@@ -224,6 +224,91 @@
         .module-header { text-align: center; margin-bottom: 25px; }
         .module-icon { font-size: 48px; margin-bottom: 10px; }
         .module-title { font-size: 22px; font-weight: 600; color: #333; margin-bottom: 5px; }
+
+        .menu-card.deliveries {
+            background: linear-gradient(135deg, #2d6a4f 0%, #52b788 100%);
+            color: white;
+        }
+        .delivery-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 16px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .delivery-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.12);
+        }
+        .delivery-item-meta { flex: 1; text-align: left; }
+        .delivery-item-title { font-weight: 600; color: #333; margin-bottom: 4px; }
+        .delivery-item-sub { font-size: 13px; color: #666; }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .status-awaiting { background: #fff3cd; color: #856404; }
+        .status-ok { background: #d4edda; color: #155724; }
+        .status-issue { background: #f8d7da; color: #721c24; }
+        .status-final { background: #cce5ff; color: #004085; }
+        .delivery-scope-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .delivery-scope-tabs button {
+            width: auto;
+            flex: 1;
+            min-width: 100px;
+            padding: 10px 8px;
+            font-size: 13px;
+            background: #e9ecef;
+            color: #333;
+            box-shadow: none;
+            transform: none;
+        }
+        .delivery-scope-tabs button.active {
+            background: linear-gradient(135deg, #2d6a4f 0%, #52b788 100%);
+            color: white;
+        }
+        .delivery-scope-tabs button:hover { transform: none; }
+        .delivery-lines {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .delivery-line-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 80px 36px;
+            gap: 8px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+        .delivery-line-row input { margin: 0; }
+        .btn-remove-line {
+            width: 36px !important;
+            padding: 8px !important;
+            background: #dc3545 !important;
+            font-size: 14px !important;
+        }
+        .btn-success-delivery {
+            background: linear-gradient(135deg, #2d6a4f 0%, #52b788 100%);
+        }
+        .btn-warn-delivery {
+            background: linear-gradient(135deg, #e67700 0%, #f08c00 100%);
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -275,6 +360,11 @@
                         <div class="menu-card-icon">📝</div>
                         <div class="menu-card-title">Notatki</div>
                         <div class="menu-card-desc">Ogólne uwagi i notatki</div>
+                    </div>
+                    <div class="menu-card deliveries" onclick="openModule('deliveries')">
+                        <div class="menu-card-icon">🚚</div>
+                        <div class="menu-card-title">Przyjęcie dostaw</div>
+                        <div class="menu-card-desc">Oczekujące: <span id="deliveriesPendingBadge">0</span></div>
                     </div>
                     <div id="configMenuCard" class="menu-card config hidden" onclick="openModule('config')">
                         <div class="menu-card-icon">⚙️</div>
@@ -550,6 +640,89 @@
                 <button class="back-to-menu" onclick="backToMenu()">Powrót do menu</button>
             </div>
 
+
+            <!-- MODULE 6: DELIVERIES -->
+            <div id="deliveriesModule" class="hidden">
+                <div class="user-info">
+                    <span><strong id="loggedUserDeliveries"></strong></span>
+                </div>
+                <div class="module-header">
+                    <div class="module-icon">🚚</div>
+                    <div class="module-title">Przyjęcie dostaw</div>
+                </div>
+
+                <div id="deliveriesListView">
+                    <div id="deliveriesAdminControls" class="hidden">
+                        <div class="delivery-scope-tabs">
+                            <button type="button" id="scopePendingBtn" class="active" onclick="setDeliveriesScope('pending')">Oczekujące</button>
+                            <button type="button" id="scopeAwaitingAdminBtn" onclick="setDeliveriesScope('awaitingAdmin')">Do potwierdzenia</button>
+                            <button type="button" id="scopeAllBtn" onclick="setDeliveriesScope('all')">Wszystkie</button>
+                        </div>
+                        <button type="button" class="btn-success-delivery" onclick="showDeliveryCreateForm()" style="margin-bottom: 15px;">+ Dodaj dostawę</button>
+                    </div>
+                    <div id="deliveriesList"></div>
+                    <div id="deliveriesListMessage" class="hidden"></div>
+                    <button class="back-to-menu" onclick="backToMenu()">Powrót do menu</button>
+                </div>
+
+                <div id="deliveryDetailView" class="hidden">
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                        <div class="summary-item">
+                            <span class="summary-label">Data:</span>
+                            <span class="summary-value" id="detailDeliveryDate"></span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Dostawca:</span>
+                            <span class="summary-value" id="detailSupplier"></span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Status:</span>
+                            <span class="summary-value" id="detailStatus"></span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Źródło:</span>
+                            <span class="summary-value" id="detailSource"></span>
+                        </div>
+                    </div>
+                    <h4 style="margin-bottom: 10px; color: #333;">Pozycje</h4>
+                    <div id="detailItems" class="delivery-lines"></div>
+                    <div id="detailReceiptInfo" class="hidden" style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 15px;"></div>
+                    <div id="deliveryActions"></div>
+                    <div id="deliveryIssueForm" class="hidden">
+                        <div class="form-group">
+                            <label for="deliveryIssueComment">Opis problemu</label>
+                            <textarea id="deliveryIssueComment" placeholder="Np. Brakuje 2 szt. Kubel, pozostałe pozycje się zgadzają."></textarea>
+                        </div>
+                        <button type="button" class="btn-warn-delivery" onclick="submitDeliveryIssue()">Wyślij zgłoszenie</button>
+                        <button type="button" class="btn-secondary" onclick="hideDeliveryIssueForm()">Anuluj</button>
+                    </div>
+                    <div id="deliveryDetailMessage" class="hidden"></div>
+                    <button class="btn-secondary" onclick="showDeliveriesList()" style="margin-top: 10px;">Wstecz do listy</button>
+                </div>
+
+                <div id="deliveryCreateView" class="hidden">
+                    <h3 style="margin-bottom: 15px; color: #333; text-align: center;">Nowa dostawa</h3>
+                    <div class="form-group">
+                        <label for="newDeliveryDate">Data dostawy</label>
+                        <input type="date" id="newDeliveryDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="newDeliverySupplier">Dostawca</label>
+                        <input type="text" id="newDeliverySupplier" placeholder="np. Dostawca X">
+                    </div>
+                    <div class="form-group">
+                        <label for="newDeliveryAdminNote">Notatka admina (opcjonalnie)</label>
+                        <textarea id="newDeliveryAdminNote" placeholder="Opcjonalna notatka"></textarea>
+                    </div>
+                    <h4 style="margin: 15px 0 10px; color: #333;">Pozycje</h4>
+                    <div id="newDeliveryLines"></div>
+                    <button type="button" class="btn-secondary" onclick="addDeliveryLineRow()" style="margin-bottom: 15px;">+ Dodaj pozycję</button>
+                    <div id="deliveryCreateMessage" class="hidden"></div>
+                    <button type="button" class="btn-success-delivery" onclick="submitCreateDelivery()" id="createDeliveryBtn">Zapisz dostawę</button>
+                    <button type="button" class="btn-secondary" onclick="showDeliveriesList()">Anuluj</button>
+                </div>
+            </div>
+
             <!-- Loading indicator -->
             <div id="loadingScreen" class="hidden">
                 <div class="loading">
@@ -583,6 +756,9 @@
         let currentUser = null;
         let currentModule = null;
         let clientsSynced = false;
+        let deliveriesScope = 'pending';
+        let currentDeliveryId = null;
+        let deliveryLineCounter = 0;
 
         async function hashPassword(password) {
             const data = new TextEncoder().encode(password);
@@ -683,6 +859,7 @@
                 configCard.classList.add('hidden');
             }
             loadClientsFromServer();
+            refreshDeliveriesPendingBadge();
         }
 
         function populateClientSelects() {
@@ -781,7 +958,7 @@
         }
 
         function hideAllScreens() {
-            const screens = ['loginScreen', 'mainMenu', 'containersModule', 'salesModule', 'complaintsModule', 'notesModule', 'configModule', 'loadingScreen'];
+            const screens = ['loginScreen', 'mainMenu', 'containersModule', 'salesModule', 'complaintsModule', 'notesModule', 'configModule', 'deliveriesModule', 'loadingScreen'];
             screens.forEach(id => document.getElementById(id).classList.add('hidden'));
         }
 
@@ -801,6 +978,10 @@
             } else if (module === 'notes') {
                 document.getElementById('notesModule').classList.remove('hidden');
                 document.getElementById('loggedUserNotes').textContent = currentUser;
+            } else if (module === 'deliveries') {
+                document.getElementById('deliveriesModule').classList.remove('hidden');
+                document.getElementById('loggedUserDeliveries').textContent = currentUser;
+                showDeliveriesList();
             } else if (module === 'config') {
                 if (currentUser !== 'tom') {
                     showMainMenu();
@@ -835,6 +1016,8 @@
                 document.getElementById('newClientCode').value = '';
                 document.getElementById('newClientName').value = '';
                 document.getElementById('configMessage').classList.add('hidden');
+            } else if (currentModule === 'deliveries') {
+                resetDeliveriesModuleState();
             }
             currentModule = null;
             showMainMenu();
@@ -1170,6 +1353,502 @@
                 submitBtn.disabled = false;
             }
         }
+
+
+        function escapeHtml(str) {
+            return String(str == null ? '' : str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function isDeliveriesAdmin() {
+            return currentUser === 'tom';
+        }
+
+        function resetDeliveriesModuleState() {
+            currentDeliveryId = null;
+            deliveriesScope = 'pending';
+            document.getElementById('deliveryIssueComment').value = '';
+            document.getElementById('deliveryIssueForm').classList.add('hidden');
+            document.getElementById('deliveryDetailMessage').classList.add('hidden');
+            document.getElementById('deliveriesListMessage').classList.add('hidden');
+            document.getElementById('deliveryCreateMessage').classList.add('hidden');
+            document.getElementById('newDeliveryDate').value = '';
+            document.getElementById('newDeliverySupplier').value = '';
+            document.getElementById('newDeliveryAdminNote').value = '';
+            document.getElementById('newDeliveryLines').innerHTML = '';
+            deliveryLineCounter = 0;
+        }
+
+        function deliveryStatusLabel(status) {
+            const map = {
+                AWAITING_RECEIPT: 'Oczekuje na przyjęcie',
+                RECEIVED_OK: 'Przyjęte OK',
+                RECEIPT_ISSUE: 'Zgłoszony błąd',
+                FINAL_CONFIRMED: 'Zatwierdzone'
+            };
+            return map[status] || status;
+        }
+
+        function deliveryStatusBadgeClass(status) {
+            if (status === 'AWAITING_RECEIPT') return 'status-badge status-awaiting';
+            if (status === 'RECEIVED_OK') return 'status-badge status-ok';
+            if (status === 'RECEIPT_ISSUE') return 'status-badge status-issue';
+            if (status === 'FINAL_CONFIRMED') return 'status-badge status-final';
+            return 'status-badge';
+        }
+
+        function formatDeliveryLine(item) {
+            return `${item.qty} × ${item.description} (${item.code})`;
+        }
+
+        async function refreshDeliveriesPendingBadge() {
+            const badge = document.getElementById('deliveriesPendingBadge');
+            if (!badge || !currentUser) return;
+            try {
+                const result = await apiGet({
+                    module: 'deliveries',
+                    deliveriesAction: 'pendingCount',
+                    user: currentUser
+                });
+                if (result.status === 'success' && result.data) {
+                    badge.textContent = result.data.count;
+                }
+            } catch (e) {
+                console.warn('Nie udało się pobrać liczby oczekujących dostaw', e);
+            }
+        }
+
+        function showDeliveriesSubviews(view) {
+            ['deliveriesListView', 'deliveryDetailView', 'deliveryCreateView'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(view).classList.remove('hidden');
+        }
+
+        function setDeliveriesScope(scope) {
+            deliveriesScope = scope;
+            ['scopePendingBtn', 'scopeAwaitingAdminBtn', 'scopeAllBtn'].forEach(id => {
+                document.getElementById(id).classList.remove('active');
+            });
+            if (scope === 'pending') document.getElementById('scopePendingBtn').classList.add('active');
+            if (scope === 'awaitingAdmin') document.getElementById('scopeAwaitingAdminBtn').classList.add('active');
+            if (scope === 'all') document.getElementById('scopeAllBtn').classList.add('active');
+            loadDeliveriesList();
+        }
+
+        async function showDeliveriesList() {
+            currentDeliveryId = null;
+            showDeliveriesSubviews('deliveriesListView');
+            const adminControls = document.getElementById('deliveriesAdminControls');
+            if (isDeliveriesAdmin()) {
+                adminControls.classList.remove('hidden');
+            } else {
+                adminControls.classList.add('hidden');
+                deliveriesScope = 'pending';
+            }
+            await loadDeliveriesList();
+            refreshDeliveriesPendingBadge();
+        }
+
+        async function loadDeliveriesList() {
+            const listDiv = document.getElementById('deliveriesList');
+            const messageDiv = document.getElementById('deliveriesListMessage');
+            listDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:10px;color:#666;">Ładowanie...</p></div>';
+            messageDiv.classList.add('hidden');
+            const scope = isDeliveriesAdmin() ? deliveriesScope : 'pending';
+            try {
+                const result = await apiGet({
+                    module: 'deliveries',
+                    deliveriesAction: 'list',
+                    user: currentUser,
+                    scope: scope
+                });
+                if (result.status !== 'success') {
+                    listDiv.innerHTML = '';
+                    messageDiv.className = 'alert alert-error';
+                    messageDiv.textContent = result.message || 'Błąd pobierania listy dostaw. Wdróż zaktualizowany Code.gs.';
+                    messageDiv.classList.remove('hidden');
+                    return;
+                }
+                renderDeliveriesList(result.data.deliveries || []);
+            } catch (e) {
+                listDiv.innerHTML = '';
+                messageDiv.className = 'alert alert-error';
+                messageDiv.textContent = 'Błąd połączenia podczas pobierania dostaw';
+                messageDiv.classList.remove('hidden');
+            }
+        }
+
+        function renderDeliveriesList(deliveries) {
+            const listDiv = document.getElementById('deliveriesList');
+            listDiv.innerHTML = '';
+            if (!deliveries.length) {
+                listDiv.innerHTML = '<p style="text-align:center;color:#666;padding:20px;">Brak dostaw w tym widoku</p>';
+                return;
+            }
+            deliveries.forEach(delivery => {
+                const item = document.createElement('div');
+                item.className = 'delivery-item';
+                item.onclick = () => openDeliveryDetail(delivery.id);
+                item.innerHTML = `
+                    <div class="delivery-item-meta">
+                        <div class="delivery-item-title">${escapeHtml(delivery.deliveryDate)} · ${escapeHtml(delivery.supplier)}</div>
+                        <div class="delivery-item-sub">${escapeHtml(delivery.id)}</div>
+                    </div>
+                    <span class="${deliveryStatusBadgeClass(delivery.status)}">${escapeHtml(deliveryStatusLabel(delivery.status))}</span>
+                `;
+                listDiv.appendChild(item);
+            });
+        }
+
+        async function openDeliveryDetail(id) {
+            currentDeliveryId = id;
+            showDeliveriesSubviews('deliveryDetailView');
+            document.getElementById('deliveryIssueForm').classList.add('hidden');
+            document.getElementById('deliveryDetailMessage').classList.add('hidden');
+            document.getElementById('detailItems').innerHTML = '<div class="spinner" style="margin:10px auto;"></div>';
+            document.getElementById('deliveryActions').innerHTML = '';
+            try {
+                const result = await apiGet({
+                    module: 'deliveries',
+                    deliveriesAction: 'get',
+                    user: currentUser,
+                    id: id
+                });
+                if (result.status !== 'success') {
+                    document.getElementById('detailItems').innerHTML = '';
+                    showDeliveryDetailMessage(result.message || 'Nie udało się pobrać dostawy', true);
+                    return;
+                }
+                renderDeliveryDetail(result.data.delivery, result.data.items || []);
+            } catch (e) {
+                document.getElementById('detailItems').innerHTML = '';
+                showDeliveryDetailMessage('Błąd połączenia podczas pobierania dostawy', true);
+            }
+        }
+
+        function renderDeliveryDetail(delivery, items) {
+            document.getElementById('detailDeliveryDate').textContent = delivery.deliveryDate;
+            document.getElementById('detailSupplier').textContent = delivery.supplier;
+            document.getElementById('detailStatus').innerHTML = `<span class="${deliveryStatusBadgeClass(delivery.status)}">${deliveryStatusLabel(delivery.status)}</span>`;
+            const sourceLabel = delivery.sourceType === 'EMAIL_PDF' ? 'EMAIL_PDF' : 'MANUAL';
+            document.getElementById('detailSource').textContent = sourceLabel + (delivery.sourceId ? ` (${delivery.sourceId})` : '');
+
+            const itemsDiv = document.getElementById('detailItems');
+            itemsDiv.innerHTML = '';
+            if (!items.length) {
+                itemsDiv.innerHTML = '<p style="color:#666;">Brak pozycji</p>';
+            } else {
+                items.forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = 'summary-item';
+                    row.innerHTML = `<span class="summary-value">${escapeHtml(formatDeliveryLine(item))}</span>`;
+                    itemsDiv.appendChild(row);
+                });
+            }
+
+            const receiptInfo = document.getElementById('detailReceiptInfo');
+            if (delivery.receiptBy || delivery.issueComment || delivery.adminBy || delivery.adminNote) {
+                let html = '';
+                if (delivery.receiptBy) {
+                    html += `<div class="summary-item"><span class="summary-label">Przyjął:</span><span class="summary-value">${escapeHtml(delivery.receiptBy)}</span></div>`;
+                }
+                if (delivery.receiptAt) {
+                    html += `<div class="summary-item"><span class="summary-label">Kiedy:</span><span class="summary-value">${escapeHtml(delivery.receiptAt)}</span></div>`;
+                }
+                if (delivery.issueComment) {
+                    html += `<div class="summary-item"><span class="summary-label">Komentarz:</span><span class="summary-value">${escapeHtml(delivery.issueComment)}</span></div>`;
+                }
+                if (delivery.adminNote) {
+                    html += `<div class="summary-item"><span class="summary-label">Notatka admina:</span><span class="summary-value">${escapeHtml(delivery.adminNote)}</span></div>`;
+                }
+                if (delivery.adminBy) {
+                    html += `<div class="summary-item"><span class="summary-label">Finalne OK:</span><span class="summary-value">${escapeHtml(delivery.adminBy)} (${escapeHtml(delivery.adminAt || '')})</span></div>`;
+                }
+                receiptInfo.innerHTML = html;
+                receiptInfo.classList.remove('hidden');
+            } else {
+                receiptInfo.classList.add('hidden');
+                receiptInfo.innerHTML = '';
+            }
+
+            const actions = document.getElementById('deliveryActions');
+            actions.innerHTML = '';
+            if (delivery.status === 'AWAITING_RECEIPT') {
+                const okBtn = document.createElement('button');
+                okBtn.className = 'btn-success-delivery';
+                okBtn.textContent = '✓ Wszystko przyjechało';
+                okBtn.onclick = confirmDeliveryOk;
+                actions.appendChild(okBtn);
+
+                const issueBtn = document.createElement('button');
+                issueBtn.className = 'btn-warn-delivery';
+                issueBtn.textContent = '⚠ Zgłoś błąd';
+                issueBtn.onclick = showDeliveryIssueForm;
+                actions.appendChild(issueBtn);
+            }
+
+            if (isDeliveriesAdmin() && (delivery.status === 'RECEIVED_OK' || delivery.status === 'RECEIPT_ISSUE')) {
+                const finalBtn = document.createElement('button');
+                finalBtn.className = 'btn-success-delivery';
+                finalBtn.style.marginTop = '10px';
+                finalBtn.textContent = '✓ FINALNE OK';
+                finalBtn.onclick = adminFinalConfirmDelivery;
+                actions.appendChild(finalBtn);
+            }
+        }
+
+        function showDeliveryDetailMessage(text, isError) {
+            const messageDiv = document.getElementById('deliveryDetailMessage');
+            messageDiv.className = isError ? 'alert alert-error' : 'alert alert-success';
+            messageDiv.textContent = text;
+            messageDiv.classList.remove('hidden');
+        }
+
+        function showDeliveryIssueForm() {
+            document.getElementById('deliveryIssueForm').classList.remove('hidden');
+            document.getElementById('deliveryIssueComment').focus();
+        }
+
+        function hideDeliveryIssueForm() {
+            document.getElementById('deliveryIssueForm').classList.add('hidden');
+            document.getElementById('deliveryIssueComment').value = '';
+        }
+
+        async function confirmDeliveryOk() {
+            if (!currentDeliveryId) return;
+            hideAllScreens();
+            document.getElementById('loadingScreen').classList.remove('hidden');
+            try {
+                const result = await apiGet({
+                    module: 'deliveries',
+                    deliveriesAction: 'confirmOk',
+                    user: currentUser,
+                    id: currentDeliveryId
+                });
+                document.getElementById('deliveriesModule').classList.remove('hidden');
+                document.getElementById('loadingScreen').classList.add('hidden');
+                showDeliveriesSubviews('deliveryDetailView');
+                if (result.status === 'success') {
+                    showDeliveryDetailMessage('✓ Potwierdzono: wszystko przyjechało', false);
+                    setTimeout(() => showDeliveriesList(), 1200);
+                } else {
+                    openDeliveryDetail(currentDeliveryId);
+                    showDeliveryDetailMessage(result.message || 'Nie udało się potwierdzić', true);
+                }
+            } catch (e) {
+                document.getElementById('deliveriesModule').classList.remove('hidden');
+                document.getElementById('loadingScreen').classList.add('hidden');
+                showDeliveriesSubviews('deliveryDetailView');
+                showDeliveryDetailMessage('Błąd połączenia', true);
+            } finally {
+                refreshDeliveriesPendingBadge();
+            }
+        }
+
+        async function submitDeliveryIssue() {
+            if (!currentDeliveryId) return;
+            const comment = document.getElementById('deliveryIssueComment').value.trim();
+            if (comment.length < 3) {
+                showDeliveryDetailMessage('Wpisz komentarz (min. 3 znaki)', true);
+                return;
+            }
+            hideAllScreens();
+            document.getElementById('loadingScreen').classList.remove('hidden');
+            try {
+                const result = await apiGet({
+                    module: 'deliveries',
+                    deliveriesAction: 'reportIssue',
+                    user: currentUser,
+                    id: currentDeliveryId,
+                    comment: comment
+                });
+                document.getElementById('deliveriesModule').classList.remove('hidden');
+                document.getElementById('loadingScreen').classList.add('hidden');
+                showDeliveriesSubviews('deliveryDetailView');
+                if (result.status === 'success') {
+                    hideDeliveryIssueForm();
+                    showDeliveryDetailMessage('✓ Zgłoszono problem z dostawą', false);
+                    setTimeout(() => showDeliveriesList(), 1200);
+                } else {
+                    openDeliveryDetail(currentDeliveryId);
+                    showDeliveryDetailMessage(result.message || 'Nie udało się zgłosić błędu', true);
+                }
+            } catch (e) {
+                document.getElementById('deliveriesModule').classList.remove('hidden');
+                document.getElementById('loadingScreen').classList.add('hidden');
+                showDeliveriesSubviews('deliveryDetailView');
+                showDeliveryDetailMessage('Błąd połączenia', true);
+            } finally {
+                refreshDeliveriesPendingBadge();
+            }
+        }
+
+        async function adminFinalConfirmDelivery() {
+            if (!currentDeliveryId || !isDeliveriesAdmin()) return;
+            if (!confirm('Potwierdzić finalnie tę dostawę?')) return;
+            hideAllScreens();
+            document.getElementById('loadingScreen').classList.remove('hidden');
+            try {
+                const result = await apiGet({
+                    module: 'deliveries',
+                    deliveriesAction: 'adminConfirm',
+                    user: currentUser,
+                    id: currentDeliveryId
+                });
+                document.getElementById('deliveriesModule').classList.remove('hidden');
+                document.getElementById('loadingScreen').classList.add('hidden');
+                showDeliveriesSubviews('deliveryDetailView');
+                if (result.status === 'success') {
+                    showDeliveryDetailMessage('✓ Finalne potwierdzenie zapisane', false);
+                    setTimeout(() => showDeliveriesList(), 1200);
+                } else {
+                    openDeliveryDetail(currentDeliveryId);
+                    showDeliveryDetailMessage(result.message || 'Nie udało się zatwierdzić', true);
+                }
+            } catch (e) {
+                document.getElementById('deliveriesModule').classList.remove('hidden');
+                document.getElementById('loadingScreen').classList.add('hidden');
+                showDeliveriesSubviews('deliveryDetailView');
+                showDeliveryDetailMessage('Błąd połączenia', true);
+            }
+        }
+
+        function showDeliveryCreateForm() {
+            if (!isDeliveriesAdmin()) return;
+            showDeliveriesSubviews('deliveryCreateView');
+            document.getElementById('deliveryCreateMessage').classList.add('hidden');
+            document.getElementById('newDeliveryDate').value = '';
+            document.getElementById('newDeliverySupplier').value = '';
+            document.getElementById('newDeliveryAdminNote').value = '';
+            document.getElementById('newDeliveryLines').innerHTML = '';
+            deliveryLineCounter = 0;
+            // Seed przykładowymi liniami z discovery (łatwy test)
+            const seed = [
+                { code: '1', description: 'Kubel', qty: 66 },
+                { code: '2', description: 'Racke', qty: 22 },
+                { code: '4', description: 'Karton', qty: 2 },
+                { code: '221', description: 'Deen ** DC **', qty: 3 },
+                { code: '222', description: 'Deense plaat', qty: 13 },
+                { code: '2288', description: '(YELLOW)** CC Tag6 **', qty: 2 }
+            ];
+            seed.forEach(line => addDeliveryLineRow(line));
+        }
+
+        function addDeliveryLineRow(preset) {
+            const wrap = document.getElementById('newDeliveryLines');
+            const rowId = 'deliveryLine_' + (++deliveryLineCounter);
+            const row = document.createElement('div');
+            row.className = 'delivery-line-row';
+            row.id = rowId;
+            row.innerHTML = `
+                <input type="text" class="dl-code" placeholder="Code" value="${preset && preset.code != null ? String(preset.code).replace(/"/g, '&quot;') : ''}">
+                <input type="text" class="dl-desc" placeholder="Description" value="${preset && preset.description != null ? String(preset.description).replace(/"/g, '&quot;') : ''}">
+                <input type="number" class="dl-qty" min="1" step="1" placeholder="Qty" value="${preset && preset.qty != null ? preset.qty : ''}">
+                <button type="button" class="btn-remove-line" onclick="removeDeliveryLineRow('${rowId}')">✕</button>
+            `;
+            wrap.appendChild(row);
+        }
+
+        function removeDeliveryLineRow(rowId) {
+            const row = document.getElementById(rowId);
+            if (row) row.remove();
+        }
+
+        function collectDeliveryLines() {
+            const rows = Array.from(document.querySelectorAll('#newDeliveryLines .delivery-line-row'));
+            const items = [];
+            for (const row of rows) {
+                const code = row.querySelector('.dl-code').value.trim();
+                const description = row.querySelector('.dl-desc').value.trim();
+                const qtyRaw = row.querySelector('.dl-qty').value;
+                const qty = Number(qtyRaw);
+                if (!code && !description && !qtyRaw) continue;
+                if (!code || !description || !qtyRaw || isNaN(qty) || qty <= 0) {
+                    throw new Error('Uzupełnij code, description i qty (> 0) we wszystkich pozycjach');
+                }
+                items.push({ code, description, qty });
+            }
+            if (!items.length) throw new Error('Dodaj co najmniej jedną pozycję');
+            return items;
+        }
+
+        function showDeliveryCreateMessage(text, isError) {
+            const messageDiv = document.getElementById('deliveryCreateMessage');
+            messageDiv.className = isError ? 'alert alert-error' : 'alert alert-success';
+            messageDiv.textContent = text;
+            messageDiv.classList.remove('hidden');
+        }
+
+        async function submitCreateDelivery() {
+            if (!isDeliveriesAdmin()) return;
+            const deliveryDate = document.getElementById('newDeliveryDate').value;
+            const supplier = document.getElementById('newDeliverySupplier').value.trim();
+            const adminNote = document.getElementById('newDeliveryAdminNote').value.trim();
+            let items;
+            try {
+                items = collectDeliveryLines();
+            } catch (err) {
+                showDeliveryCreateMessage(err.message, true);
+                return;
+            }
+            if (!deliveryDate) {
+                showDeliveryCreateMessage('Podaj datę dostawy', true);
+                return;
+            }
+            if (!supplier) {
+                showDeliveryCreateMessage('Podaj dostawcę', true);
+                return;
+            }
+            const itemsJson = JSON.stringify(items);
+            if (itemsJson.length > 3500) {
+                showDeliveryCreateMessage('Za dużo pozycji jak na GET (itemsJson zbyt długie). Usuń część pozycji.', true);
+                return;
+            }
+            const btn = document.getElementById('createDeliveryBtn');
+            btn.disabled = true;
+            hideAllScreens();
+            document.getElementById('loadingScreen').classList.remove('hidden');
+            try {
+                const result = await apiGet({
+                    module: 'deliveries',
+                    deliveriesAction: 'create',
+                    user: currentUser,
+                    deliveryDate: deliveryDate,
+                    supplier: supplier,
+                    adminNote: adminNote,
+                    sourceType: 'MANUAL',
+                    itemsJson: itemsJson
+                });
+                document.getElementById('deliveriesModule').classList.remove('hidden');
+                document.getElementById('loadingScreen').classList.add('hidden');
+                if (result.status === 'success') {
+                    showDeliveriesSubviews('deliveryCreateView');
+                    showDeliveryCreateMessage('✓ Dostawa utworzona', false);
+                    setTimeout(() => {
+                        deliveriesScope = 'pending';
+                        setDeliveriesScope('pending');
+                        showDeliveriesList();
+                    }, 1000);
+                } else {
+                    showDeliveriesSubviews('deliveryCreateView');
+                    showDeliveryCreateMessage(result.message || 'Błąd tworzenia dostawy', true);
+                }
+            } catch (e) {
+                document.getElementById('deliveriesModule').classList.remove('hidden');
+                document.getElementById('loadingScreen').classList.add('hidden');
+                showDeliveriesSubviews('deliveryCreateView');
+                showDeliveryCreateMessage('Błąd połączenia podczas tworzenia dostawy', true);
+            } finally {
+                btn.disabled = false;
+                refreshDeliveriesPendingBadge();
+            }
+        }
+
 
         document.getElementById('password').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') login();
