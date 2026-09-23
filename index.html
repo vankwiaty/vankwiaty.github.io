@@ -770,7 +770,8 @@
             SHEET_URL: 'https://script.google.com/macros/s/AKfycbyOxMlURePFsIXWAS1XE1N12l6P0IdpVyVc7qzP7SDsNI2gff-nEDK8bBxAG_xX8Jfw/exec',
             SESSION_KEY: 'sessionToken',
             USER_KEY: 'loggedUser',
-            EXPIRES_KEY: 'sessionExpiresAt'
+            EXPIRES_KEY: 'sessionExpiresAt',
+            IS_ADMIN_KEY: 'sessionIsAdmin'
         };
 
         const DEFAULT_CLIENTS = {
@@ -781,6 +782,7 @@
 
         let CLIENTS = { ...DEFAULT_CLIENTS };
         let currentUser = null;
+        let currentUserIsAdmin = false;
         let sessionToken = null;
         let currentModule = null;
         let clientsSynced = false;
@@ -796,20 +798,24 @@
             };
         }
 
-        function saveSession(token, user, expiresAt) {
+        function saveSession(token, user, expiresAt, isAdmin) {
             sessionToken = token;
             currentUser = user;
+            currentUserIsAdmin = !!isAdmin;
             localStorage.setItem(CONFIG.SESSION_KEY, token);
             localStorage.setItem(CONFIG.USER_KEY, user);
+            localStorage.setItem(CONFIG.IS_ADMIN_KEY, currentUserIsAdmin ? '1' : '0');
             if (expiresAt) localStorage.setItem(CONFIG.EXPIRES_KEY, String(expiresAt));
         }
 
         function clearSessionLocal() {
             sessionToken = null;
             currentUser = null;
+            currentUserIsAdmin = false;
             localStorage.removeItem(CONFIG.SESSION_KEY);
             localStorage.removeItem(CONFIG.USER_KEY);
             localStorage.removeItem(CONFIG.EXPIRES_KEY);
+            localStorage.removeItem(CONFIG.IS_ADMIN_KEY);
             // legacy key
             localStorage.removeItem('loggedUser');
         }
@@ -911,10 +917,12 @@
                 const result = await apiGet({ module: 'auth', authAction: 'me' });
                 if (result.status === 'success' && result.data && result.data.user) {
                     currentUser = result.data.user;
+                    currentUserIsAdmin = !!result.data.isAdmin;
                     if (result.data.expiresAt) {
                         localStorage.setItem(CONFIG.EXPIRES_KEY, String(result.data.expiresAt));
                     }
                     localStorage.setItem(CONFIG.USER_KEY, currentUser);
+                    localStorage.setItem(CONFIG.IS_ADMIN_KEY, currentUserIsAdmin ? '1' : '0');
                     showMainMenu();
                     return;
                 }
@@ -941,7 +949,12 @@
                     password: password
                 });
                 if (result.status === 'success' && result.data && result.data.sessionToken) {
-                    saveSession(result.data.sessionToken, result.data.user, result.data.expiresAt);
+                    saveSession(
+                        result.data.sessionToken,
+                        result.data.user,
+                        result.data.expiresAt,
+                        result.data.isAdmin
+                    );
                     errorDiv.classList.add('hidden');
                     document.getElementById('password').value = '';
                     showMainMenu();
@@ -976,7 +989,7 @@
             document.getElementById('mainMenu').classList.remove('hidden');
             document.getElementById('loggedUser').textContent = currentUser;
             const configCard = document.getElementById('configMenuCard');
-            if (currentUser === 'tom') {
+            if (isDeliveriesAdmin()) {
                 configCard.classList.remove('hidden');
             } else {
                 configCard.classList.add('hidden');
@@ -1106,7 +1119,7 @@
                 document.getElementById('loggedUserDeliveries').textContent = currentUser;
                 showDeliveriesList();
             } else if (module === 'config') {
-                if (currentUser !== 'tom') {
+                if (!isDeliveriesAdmin()) {
                     showMainMenu();
                     return;
                 }
@@ -1478,7 +1491,7 @@
         }
 
         function isDeliveriesAdmin() {
-            return currentUser === 'tom';
+            return !!currentUserIsAdmin;
         }
 
         function resetDeliveriesModuleState() {
