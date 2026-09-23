@@ -206,761 +206,761 @@
         </div>
 
         <div class="content">
-            <!-- Login Screen -->
-            <div id="loginScreen">
-                <div class="form-group">
-                    <label for="username">Nazwa użytkownika</label>
-                    <input type="text" id="username" placeholder="Wpisz swoją nazwę">
-                </div>
-                <div class="form-group">
-                    <label for="password">Hasło</label>
-                    <input type="password" id="password" placeholder="Wpisz hasło">
-                </div>
-                <div id="loginError" class="alert alert-error hidden"></div>
-                <button onclick="login()">Zaloguj się</button>
+        <!-- Login Screen -->
+        <div id="loginScreen">
+            <div class="form-group">
+                <label for="username">Nazwa użytkownika</label>
+                <input type="text" id="username" placeholder="Wpisz swoją nazwę">
             </div>
-
-            <!-- Main Menu -->
-            <div id="mainMenu" class="hidden">
-                <div class="user-info">
-                    <span>Zalogowany: <strong id="loggedUser"></strong></span>
-                    <button class="btn-logout" onclick="logout()" style="width: auto; padding: 5px 15px; font-size: 14px;">Wyloguj</button>
-                </div>
-                <h3 style="text-align: center; margin-bottom: 20px; color: #333;">Wybierz moduł</h3>
-                <div class="menu-grid">
-                    <div class="menu-card containers" onclick="openModule('containers')">
-                        <div class="menu-card-icon">📦</div>
-                        <div class="menu-card-title">Pojemniki</div>
-                        <div class="menu-card-desc">Ewidencja wydań i zwrotów</div>
-                    </div>
-                    <div class="menu-card sales" onclick="openModule('sales')">
-                        <div class="menu-card-icon">💰</div>
-                        <div class="menu-card-title">Sprzedaż ze stocku</div>
-                        <div class="menu-card-desc">Rejestracja sprzedaży</div>
-                    </div>
-                    <div class="menu-card complaints" onclick="openModule('complaints')">
-                        <div class="menu-card-icon">⚠️</div>
-                        <div class="menu-card-title">Reklamacje</div>
-                        <div class="menu-card-desc">Zgłoszenia reklamacyjne</div>
-                    </div>
-                    <div class="menu-card" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333;" onclick="openModule('notes')">
-                        <div class="menu-card-icon">📝</div>
-                        <div class="menu-card-title">Notatki</div>
-                        <div class="menu-card-desc">Ogólne uwagi i notatki</div>
-                    </div>
-                </div>
+            <div class="form-group">
+                <label for="password">Hasło</label>
+                <input type="password" id="password" placeholder="Wpisz hasło">
             </div>
+            <div id="loginError" class="alert alert-error hidden"></div>
+            <button onclick="login()">Zaloguj się</button>
+        </div>
 
-            <!-- MODULE 1: CONTAINERS -->
-            <div id="containersModule" class="hidden">
-                <div class="user-info">
-                    <span><strong id="loggedUserContainers"></strong></span>
-                </div>
-                <div class="module-header">
-                    <div class="module-icon">📦</div>
-                    <div class="module-title">Ewidencja Pojemników</div>
-                </div>
-
-                <!-- Containers Submenu -->
-                <div id="containersSubmenu">
-                    <h3 style="text-align: center; margin-bottom: 20px; color: #333;">Wybierz akcję</h3>
-                    <div class="menu-grid">
-                        <div class="menu-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;" onclick="startNewEntry()">
-                            <div class="menu-card-icon">➕</div>
-                            <div class="menu-card-title">Nowy wpis</div>
-                            <div class="menu-card-desc">Dodaj wydanie/zwrot</div>
-                        </div>
-                        <div class="menu-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;" onclick="showBalanceCheck()">
-                            <div class="menu-card-icon">🔍</div>
-                            <div class="menu-card-title">Sprawdź saldo</div>
-                            <div class="menu-card-desc">Zobacz bilans klienta</div>
-                        </div>
-                    </div>
-                    <button class="back-to-menu" onclick="backToMenu()">Powrót do menu</button>
-                </div>
-
-                <!-- Balance Check Screen -->
-                <div id="balanceCheckScreen" class="hidden">
-                    <h3 style="margin-bottom: 20px; color: #333; text-align: center;">🔍 Sprawdź saldo</h3>
-                    <div class="form-group">
-                        <label for="balanceClientSelect">Wybierz klienta</label>
-                        <select id="balanceClientSelect" onchange="fetchBalance()">
-                            <option value="">-- Wybierz klienta --</option>
-                        </select>
-                    </div>
-                    <div id="balanceLoading" class="hidden" style="text-align: center; padding: 20px;">
-                        <div class="spinner" style="margin: 0 auto;"></div>
-                        <p style="margin-top: 10px; color: #666;">Pobieranie danych...</p>
-                    </div>
-                    <div id="balanceResults" class="hidden" style="background: #f8f9fa; padding: 25px; border-radius: 15px; margin-bottom: 20px;">
-                        <h4 style="text-align: center; color: #333; margin-bottom: 20px;" id="balanceClientName"></h4>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                            <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
-                                <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Pojemniki wydane</div>
-                                <div style="font-size: 24px; font-weight: 600; color: #667eea;" id="balanceTotalIssued">0</div>
-                            </div>
-                            <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
-                                <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Nadstawki wydane</div>
-                                <div style="font-size: 24px; font-weight: 600; color: #667eea;" id="balanceTotalIssuedExt">0</div>
-                            </div>
-                            <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
-                                <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Pojemniki zwrócone</div>
-                                <div style="font-size: 24px; font-weight: 600; color: #28a745;" id="balanceTotalReturned">0</div>
-                            </div>
-                            <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
-                                <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Nadstawki zwrócone</div>
-                                <div style="font-size: 24px; font-weight: 600; color: #28a745;" id="balanceTotalReturnedExt">0</div>
-                            </div>
-                        </div>
-                        <div style="border-top: 2px solid #dee2e6; padding-top: 20px;">
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                                <div style="padding: 20px; border-radius: 10px; text-align: center; border: 2px solid;" id="balanceContainersCard">
-                                    <div style="font-size: 14px; font-weight: 600; margin-bottom: 5px;">U KLIENTA</div>
-                                    <div style="font-size: 14px; margin-bottom: 10px; opacity: 0.8;">Pojemniki</div>
-                                    <div style="font-size: 32px; font-weight: 700;" id="balanceContainers">0</div>
-                                </div>
-                                <div style="padding: 20px; border-radius: 10px; text-align: center; border: 2px solid;" id="balanceExtensionsCard">
-                                    <div style="font-size: 14px; font-weight: 600; margin-bottom: 5px;">U KLIENTA</div>
-                                    <div style="font-size: 14px; margin-bottom: 10px; opacity: 0.8;">Nadstawki</div>
-                                    <div style="font-size: 32px; font-weight: 700;" id="balanceExtensions">0</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div style="text-align: center; margin-top: 15px; font-size: 12px; color: #666; font-style: italic;" id="balanceLastUpdate"></div>
-                    </div>
-                    <div id="balanceError" class="alert alert-error hidden"></div>
-                    <button class="btn-secondary" onclick="backToContainersSubmenu()">Wstecz</button>
-                </div>
-
-                <!-- Entry screens -->
-                <div id="containerEntryScreens" class="hidden">
-                    <div class="step-indicator">
-                        <div class="step active" id="containerStep1">
-                            <div class="step-number">1</div>
-                            <div class="step-label">Klient</div>
-                        </div>
-                        <div class="step" id="containerStep2">
-                            <div class="step-number">2</div>
-                            <div class="step-label">Wydanie</div>
-                        </div>
-                        <div class="step" id="containerStep3">
-                            <div class="step-number">3</div>
-                            <div class="step-label">Zwrot</div>
-                        </div>
-                        <div class="step" id="containerStep4">
-                            <div class="step-number">4</div>
-                            <div class="step-label">Podsumowanie</div>
-                        </div>
-                    </div>
-                    <div id="containerScreen1">
-                        <div class="form-group">
-                            <label for="containerClientSelect">Wybierz klienta</label>
-                            <select id="containerClientSelect">
-                                <option value="">-- Wybierz klienta --</option>
-                            </select>
-                        </div>
-                        <button onclick="containerGoToStep2()">Dalej</button>
-                        <button class="btn-secondary" onclick="backToContainersSubmenu()">Wstecz</button>
-                    </div>
-                    <div id="containerScreen2" class="hidden">
-                        <h3 style="margin-bottom: 20px; color: #333;">Wydanie pojemników</h3>
-                        <div class="form-group">
-                            <label for="issuedContainers">Pojemniki wydane</label>
-                            <input type="number" id="issuedContainers" min="0" value="0">
-                        </div>
-                        <div class="form-group">
-                            <label for="issuedExtensions">Nadstawki wydane</label>
-                            <input type="number" id="issuedExtensions" min="0" value="0">
-                        </div>
-                        <button onclick="containerGoToStep3()">Dalej</button>
-                        <button class="btn-secondary" onclick="containerGoToStep1()">Wstecz</button>
-                    </div>
-                    <div id="containerScreen3" class="hidden">
-                        <h3 style="margin-bottom: 20px; color: #333;">Zwrot pojemników</h3>
-                        <div class="form-group">
-                            <label for="returnedContainers">Pojemniki zwrócone</label>
-                            <input type="number" id="returnedContainers" min="0" value="0">
-                        </div>
-                        <div class="form-group">
-                            <label for="returnedExtensions">Nadstawki zwrócone</label>
-                            <input type="number" id="returnedExtensions" min="0" value="0">
-                        </div>
-                        <button onclick="containerGoToStep4()">Dalej</button>
-                        <button class="btn-secondary" onclick="containerGoToStep2()">Wstecz</button>
-                    </div>
-                    <div id="containerScreen4" class="hidden">
-                        <h3 style="margin-bottom: 20px; color: #333;">Podsumowanie</h3>
-                        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                            <div class="summary-item">
-                                <span class="summary-label">Klient:</span>
-                                <span class="summary-value" id="summaryClient"></span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="summary-label">Pojemniki wydane:</span>
-                                <span class="summary-value" id="summaryIssuedContainers"></span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="summary-label">Nadstawki wydane:</span>
-                                <span class="summary-value" id="summaryIssuedExtensions"></span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="summary-label">Pojemniki zwrócone:</span>
-                                <span class="summary-value" id="summaryReturnedContainers"></span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="summary-label">Nadstawki zwrócone:</span>
-                                <span class="summary-value" id="summaryReturnedExtensions"></span>
-                            </div>
-                        </div>
-                        <div id="containerSubmitMessage" class="hidden"></div>
-                        <button onclick="submitContainerData()" id="containerSubmitBtn">Zapisz do arkusza</button>
-                        <button class="btn-secondary" onclick="containerGoToStep3()">Wstecz</button>
-                        <button class="btn-secondary" onclick="containerStartOver()">Nowy wpis</button>
-                    </div>
-                </div>
+        <!-- Main Menu -->
+        <div id="mainMenu" class="hidden">
+            <div class="user-info">
+                <span>Zalogowany: <strong id="loggedUser"></strong></span>
+                <button class="btn-logout" onclick="logout()" style="width: auto; padding: 5px 15px; font-size: 14px;">Wyloguj</button>
             </div>
-
-            <!-- MODULE 2: SALES -->
-            <div id="salesModule" class="hidden">
-                <div class="user-info">
-                    <span><strong id="loggedUserSales"></strong></span>
+            <h3 style="text-align: center; margin-bottom: 20px; color: #333;">Wybierz moduł</h3>
+            <div class="menu-grid">
+                <div class="menu-card containers" onclick="openModule('containers')">
+                    <div class="menu-card-icon">📦</div>
+                    <div class="menu-card-title">Pojemniki</div>
+                    <div class="menu-card-desc">Ewidencja wydań i zwrotów</div>
                 </div>
-                <div class="module-header">
-                    <div class="module-icon">💰</div>
-                    <div class="module-title">Sprzedaż ze stocku</div>
+                <div class="menu-card sales" onclick="openModule('sales')">
+                    <div class="menu-card-icon">💰</div>
+                    <div class="menu-card-title">Sprzedaż ze stocku</div>
+                    <div class="menu-card-desc">Rejestracja sprzedaży</div>
                 </div>
-                <div class="form-group">
-                    <label for="salesClientSelect">Wybierz klienta</label>
-                    <select id="salesClientSelect">
-                        <option value="">-- Wybierz klienta --</option>
-                    </select>
+                <div class="menu-card complaints" onclick="openModule('complaints')">
+                    <div class="menu-card-icon">⚠️</div>
+                    <div class="menu-card-title">Reklamacje</div>
+                    <div class="menu-card-desc">Zgłoszenia reklamacyjne</div>
                 </div>
-                <div class="form-group">
-                    <label for="salesDescription">Opis sprzedaży</label>
-                    <textarea id="salesDescription" placeholder="Wpisz szczegóły sprzedaży (produkt, ilość, cena, itp.)"></textarea>
-                </div>
-                <div id="salesMessage" class="hidden"></div>
-                <button onclick="submitSalesData()" id="salesSubmitBtn">Zapisz sprzedaż</button>
-                <button class="back-to-menu" onclick="backToMenu()">Powrót do menu</button>
-            </div>
-
-            <!-- MODULE 3: COMPLAINTS -->
-            <div id="complaintsModule" class="hidden">
-                <div class="user-info">
-                    <span><strong id="loggedUserComplaints"></strong></span>
-                </div>
-                <div class="module-header">
-                    <div class="module-icon">⚠️</div>
-                    <div class="module-title">Reklamacje</div>
-                </div>
-                <div class="form-group">
-                    <label for="complaintsClientSelect">Wybierz klienta</label>
-                    <select id="complaintsClientSelect">
-                        <option value="">-- Wybierz klienta --</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="complaintsDescription">Opis reklamacji</label>
-                    <textarea id="complaintsDescription" placeholder="Wpisz szczegóły reklamacji (powód, produkty, itp.)"></textarea>
-                </div>
-                <div id="complaintsMessage" class="hidden"></div>
-                <button onclick="submitComplaintsData()" id="complaintsSubmitBtn">Zapisz reklamację</button>
-                <button class="back-to-menu" onclick="backToMenu()">Powrót do menu</button>
-            </div>
-
-            <!-- MODULE 4: NOTES -->
-            <div id="notesModule" class="hidden">
-                <div class="user-info">
-                    <span><strong id="loggedUserNotes"></strong></span>
-                </div>
-                <div class="module-header">
-                    <div class="module-icon">📝</div>
-                    <div class="module-title">Notatki</div>
-                </div>
-                <div class="form-group">
-                    <label for="notesClientSelect">Klient (opcjonalnie)</label>
-                    <select id="notesClientSelect">
-                        <option value="">-- Ogólna notatka (bez klienta) --</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="notesDescription">Treść notatki</label>
-                    <textarea id="notesDescription" placeholder="Wpisz notatkę, uwagę, przypomnienie..."></textarea>
-                </div>
-                <div id="notesMessage" class="hidden"></div>
-                <button onclick="submitNotesData()" id="notesSubmitBtn">Zapisz notatkę</button>
-                <button class="back-to-menu" onclick="backToMenu()">Powrót do menu</button>
-            </div>
-
-            <!-- Loading indicator -->
-            <div id="loadingScreen" class="hidden">
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p style="margin-top: 15px; color: #666;">Zapisywanie danych...</p>
+                <div class="menu-card" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333;" onclick="openModule('notes')">
+                    <div class="menu-card-icon">📝</div>
+                    <div class="menu-card-title">Notatki</div>
+                    <div class="menu-card-desc">Ogólne uwagi i notatki</div>
                 </div>
             </div>
         </div>
+
+        <!-- MODULE 1: CONTAINERS -->
+        <div id="containersModule" class="hidden">
+            <div class="user-info">
+                <span><strong id="loggedUserContainers"></strong></span>
+            </div>
+            <div class="module-header">
+                <div class="module-icon">📦</div>
+                <div class="module-title">Ewidencja Pojemników</div>
+            </div>
+
+            <!-- Containers Submenu -->
+            <div id="containersSubmenu">
+                <h3 style="text-align: center; margin-bottom: 20px; color: #333;">Wybierz akcję</h3>
+                <div class="menu-grid">
+                    <div class="menu-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;" onclick="startNewEntry()">
+                        <div class="menu-card-icon">➕</div>
+                        <div class="menu-card-title">Nowy wpis</div>
+                        <div class="menu-card-desc">Dodaj wydanie/zwrot</div>
+                    </div>
+                    <div class="menu-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;" onclick="showBalanceCheck()">
+                        <div class="menu-card-icon">🔍</div>
+                        <div class="menu-card-title">Sprawdź saldo</div>
+                        <div class="menu-card-desc">Zobacz bilans klienta</div>
+                    </div>
+                </div>
+                <button class="back-to-menu" onclick="backToMenu()">Powrót do menu</button>
+            </div>
+
+            <!-- Balance Check Screen -->
+            <div id="balanceCheckScreen" class="hidden">
+                <h3 style="margin-bottom: 20px; color: #333; text-align: center;">🔍 Sprawdź saldo</h3>
+                <div class="form-group">
+                    <label for="balanceClientSelect">Wybierz klienta</label>
+                    <select id="balanceClientSelect" onchange="fetchBalance()">
+                        <option value="">-- Wybierz klienta --</option>
+                    </select>
+                </div>
+                <div id="balanceLoading" class="hidden" style="text-align: center; padding: 20px;">
+                    <div class="spinner" style="margin: 0 auto;"></div>
+                    <p style="margin-top: 10px; color: #666;">Pobieranie danych...</p>
+                </div>
+                <div id="balanceResults" class="hidden" style="background: #f8f9fa; padding: 25px; border-radius: 15px; margin-bottom: 20px;">
+                    <h4 style="text-align: center; color: #333; margin-bottom: 20px;" id="balanceClientName"></h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                        <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Pojemniki wydane</div>
+                            <div style="font-size: 24px; font-weight: 600; color: #667eea;" id="balanceTotalIssued">0</div>
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Nadstawki wydane</div>
+                            <div style="font-size: 24px; font-weight: 600; color: #667eea;" id="balanceTotalIssuedExt">0</div>
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Pojemniki zwrócone</div>
+                            <div style="font-size: 24px; font-weight: 600; color: #28a745;" id="balanceTotalReturned">0</div>
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Nadstawki zwrócone</div>
+                            <div style="font-size: 24px; font-weight: 600; color: #28a745;" id="balanceTotalReturnedExt">0</div>
+                        </div>
+                    </div>
+                    <div style="border-top: 2px solid #dee2e6; padding-top: 20px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div style="padding: 20px; border-radius: 10px; text-align: center; border: 2px solid;" id="balanceContainersCard">
+                                <div style="font-size: 14px; font-weight: 600; margin-bottom: 5px;">U KLIENTA</div>
+                                <div style="font-size: 14px; margin-bottom: 10px; opacity: 0.8;">Pojemniki</div>
+                                <div style="font-size: 32px; font-weight: 700;" id="balanceContainers">0</div>
+                            </div>
+                            <div style="padding: 20px; border-radius: 10px; text-align: center; border: 2px solid;" id="balanceExtensionsCard">
+                                <div style="font-size: 14px; font-weight: 600; margin-bottom: 5px;">U KLIENTA</div>
+                                <div style="font-size: 14px; margin-bottom: 10px; opacity: 0.8;">Nadstawki</div>
+                                <div style="font-size: 32px; font-weight: 700;" id="balanceExtensions">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 15px; font-size: 12px; color: #666; font-style: italic;" id="balanceLastUpdate"></div>
+                </div>
+                <div id="balanceError" class="alert alert-error hidden"></div>
+                <button class="btn-secondary" onclick="backToContainersSubmenu()">Wstecz</button>
+            </div>
+
+            <!-- Entry screens -->
+            <div id="containerEntryScreens" class="hidden">
+                <div class="step-indicator">
+                    <div class="step active" id="containerStep1">
+                        <div class="step-number">1</div>
+                        <div class="step-label">Klient</div>
+                    </div>
+                    <div class="step" id="containerStep2">
+                        <div class="step-number">2</div>
+                        <div class="step-label">Wydanie</div>
+                    </div>
+                    <div class="step" id="containerStep3">
+                        <div class="step-number">3</div>
+                        <div class="step-label">Zwrot</div>
+                    </div>
+                    <div class="step" id="containerStep4">
+                        <div class="step-number">4</div>
+                        <div class="step-label">Podsumowanie</div>
+                    </div>
+                </div>
+                <div id="containerScreen1">
+                    <div class="form-group">
+                        <label for="containerClientSelect">Wybierz klienta</label>
+                        <select id="containerClientSelect">
+                            <option value="">-- Wybierz klienta --</option>
+                        </select>
+                    </div>
+                    <button onclick="containerGoToStep2()">Dalej</button>
+                    <button class="btn-secondary" onclick="backToContainersSubmenu()">Wstecz</button>
+                </div>
+                <div id="containerScreen2" class="hidden">
+                    <h3 style="margin-bottom: 20px; color: #333;">Wydanie pojemników</h3>
+                    <div class="form-group">
+                        <label for="issuedContainers">Pojemniki wydane</label>
+                        <input type="number" id="issuedContainers" min="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="issuedExtensions">Nadstawki wydane</label>
+                        <input type="number" id="issuedExtensions" min="0" value="0">
+                    </div>
+                    <button onclick="containerGoToStep3()">Dalej</button>
+                    <button class="btn-secondary" onclick="containerGoToStep1()">Wstecz</button>
+                </div>
+                <div id="containerScreen3" class="hidden">
+                    <h3 style="margin-bottom: 20px; color: #333;">Zwrot pojemników</h3>
+                    <div class="form-group">
+                        <label for="returnedContainers">Pojemniki zwrócone</label>
+                        <input type="number" id="returnedContainers" min="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="returnedExtensions">Nadstawki zwrócone</label>
+                        <input type="number" id="returnedExtensions" min="0" value="0">
+                    </div>
+                    <button onclick="containerGoToStep4()">Dalej</button>
+                    <button class="btn-secondary" onclick="containerGoToStep2()">Wstecz</button>
+                </div>
+                <div id="containerScreen4" class="hidden">
+                    <h3 style="margin-bottom: 20px; color: #333;">Podsumowanie</h3>
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <div class="summary-item">
+                            <span class="summary-label">Klient:</span>
+                            <span class="summary-value" id="summaryClient"></span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Pojemniki wydane:</span>
+                            <span class="summary-value" id="summaryIssuedContainers"></span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Nadstawki wydane:</span>
+                            <span class="summary-value" id="summaryIssuedExtensions"></span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Pojemniki zwrócone:</span>
+                            <span class="summary-value" id="summaryReturnedContainers"></span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Nadstawki zwrócone:</span>
+                            <span class="summary-value" id="summaryReturnedExtensions"></span>
+                        </div>
+                    </div>
+                    <div id="containerSubmitMessage" class="hidden"></div>
+                    <button onclick="submitContainerData()" id="containerSubmitBtn">Zapisz do arkusza</button>
+                    <button class="btn-secondary" onclick="containerGoToStep3()">Wstecz</button>
+                    <button class="btn-secondary" onclick="containerStartOver()">Nowy wpis</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODULE 2: SALES -->
+        <div id="salesModule" class="hidden">
+            <div class="user-info">
+                <span><strong id="loggedUserSales"></strong></span>
+            </div>
+            <div class="module-header">
+                <div class="module-icon">💰</div>
+                <div class="module-title">Sprzedaż ze stocku</div>
+            </div>
+            <div class="form-group">
+                <label for="salesClientSelect">Wybierz klienta</label>
+                <select id="salesClientSelect">
+                    <option value="">-- Wybierz klienta --</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="salesDescription">Opis sprzedaży</label>
+                <textarea id="salesDescription" placeholder="Wpisz szczegóły sprzedaży (produkt, ilość, cena, itp.)"></textarea>
+            </div>
+            <div id="salesMessage" class="hidden"></div>
+            <button onclick="submitSalesData()" id="salesSubmitBtn">Zapisz sprzedaż</button>
+            <button class="back-to-menu" onclick="backToMenu()">Powrót do menu</button>
+        </div>
+
+        <!-- MODULE 3: COMPLAINTS -->
+        <div id="complaintsModule" class="hidden">
+            <div class="user-info">
+                <span><strong id="loggedUserComplaints"></strong></span>
+            </div>
+            <div class="module-header">
+                <div class="module-icon">⚠️</div>
+                <div class="module-title">Reklamacje</div>
+            </div>
+            <div class="form-group">
+                <label for="complaintsClientSelect">Wybierz klienta</label>
+                <select id="complaintsClientSelect">
+                    <option value="">-- Wybierz klienta --</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="complaintsDescription">Opis reklamacji</label>
+                <textarea id="complaintsDescription" placeholder="Wpisz szczegóły reklamacji (powód, produkty, itp.)"></textarea>
+            </div>
+            <div id="complaintsMessage" class="hidden"></div>
+            <button onclick="submitComplaintsData()" id="complaintsSubmitBtn">Zapisz reklamację</button>
+            <button class="back-to-menu" onclick="backToMenu()">Powrót do menu</button>
+        </div>
+
+        <!-- MODULE 4: NOTES -->
+        <div id="notesModule" class="hidden">
+            <div class="user-info">
+                <span><strong id="loggedUserNotes"></strong></span>
+            </div>
+            <div class="module-header">
+                <div class="module-icon">📝</div>
+                <div class="module-title">Notatki</div>
+            </div>
+            <div class="form-group">
+                <label for="notesClientSelect">Klient (opcjonalnie)</label>
+                <select id="notesClientSelect">
+                    <option value="">-- Ogólna notatka (bez klienta) --</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="notesDescription">Treść notatki</label>
+                <textarea id="notesDescription" placeholder="Wpisz notatkę, uwagę, przypomnienie..."></textarea>
+            </div>
+            <div id="notesMessage" class="hidden"></div>
+            <button onclick="submitNotesData()" id="notesSubmitBtn">Zapisz notatkę</button>
+            <button class="back-to-menu" onclick="backToMenu()">Powrót do menu</button>
+        </div>
+
+        <!-- Loading indicator -->
+        <div id="loadingScreen" class="hidden">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 15px; color: #666;">Zapisywanie danych...</p>
+            </div>
+        </div>
     </div>
+</div>
 
-    <script>
-        const CONFIG = {
-            SHEET_URL: 'https://script.google.com/macros/s/AKfycbyOxMlURePFsIXWAS1XE1N12l6P0IdpVyVc7qzP7SDsNI2gff-nEDK8bBxAG_xX8Jfw/exec',
-            USERS: {
-                'admin': 'haslo123',
-                'jan': 'jan123',
-                'anna': 'anna123'
-            }
-        };
-
-        const CLIENTS = {
-            "58B": "FLO", "58C": "ZKT", "58D": "ALE", "58E": "ARC", "58F": "JEA",
-            "58G": "INS", "58H": "ONI", "58J": "LAW", "58K": "SAL", "58L": "MDL",
-            "58M": "FLD", "58N": "MON", "58P": "REN", "58Q": "ZYL", "58Z": "ZYL"
-        };
-
-        let currentUser = null;
-        let currentModule = null;
-
-        document.addEventListener('DOMContentLoaded', function() {
-            populateClientSelects();
-            checkLogin();
-        });
-
-        function checkLogin() {
-            const savedUser = localStorage.getItem('loggedUser');
-            if (savedUser) {
-                currentUser = savedUser;
-                showMainMenu();
-            }
+<script>
+    const CONFIG = {
+        SHEET_URL: 'https://script.google.com/macros/s/AKfycbyOxMlURePFsIXWAS1XE1N12l6P0IdpVyVc7qzP7SDsNI2gff-nEDK8bBxAG_xX8Jfw/exec',
+        USERS: {
+            'admin': 'haslo123',
+            'jan': 'jan123',
+            'anna': 'anna123'
         }
+    };
 
-        function login() {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
-            const errorDiv = document.getElementById('loginError');
-            if (!username || !password) {
-                errorDiv.textContent = 'Wypełnij wszystkie pola';
-                errorDiv.classList.remove('hidden');
-                return;
-            }
-            if (CONFIG.USERS[username] && CONFIG.USERS[username] === password) {
-                currentUser = username;
-                localStorage.setItem('loggedUser', username);
-                errorDiv.classList.add('hidden');
-                showMainMenu();
-            } else {
-                errorDiv.textContent = 'Nieprawidłowa nazwa użytkownika lub hasło';
-                errorDiv.classList.remove('hidden');
-            }
-        }
+    const CLIENTS = {
+        "58B": "FLO", "58C": "ZKT", "58D": "ALE", "58E": "ARC", "58F": "JEA",
+        "58G": "INS", "58H": "ONI", "58J": "LAW", "58K": "SAL", "58L": "MDL",
+        "58M": "FLD", "58N": "MON", "58P": "REN", "58Q": "ZYL", "58Z": "ZYL"
+    };
 
-        function logout() {
-            localStorage.removeItem('loggedUser');
-            currentUser = null;
-            currentModule = null;
-            hideAllScreens();
-            document.getElementById('loginScreen').classList.remove('hidden');
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-        }
+    let currentUser = null;
+    let currentModule = null;
 
-        function showMainMenu() {
-            hideAllScreens();
-            document.getElementById('mainMenu').classList.remove('hidden');
-            document.getElementById('loggedUser').textContent = currentUser;
-        }
+    document.addEventListener('DOMContentLoaded', function() {
+        populateClientSelects();
+        checkLogin();
+    });
 
-        function populateClientSelects() {
-            const selects = ['containerClientSelect', 'salesClientSelect', 'complaintsClientSelect', 'balanceClientSelect', 'notesClientSelect'];
-            selects.forEach(selectId => {
-                const select = document.getElementById(selectId);
-                if (!select) return;
-                for (const [code, name] of Object.entries(CLIENTS)) {
-                    const option = document.createElement('option');
-                    option.value = `${code} - ${name}`;
-                    option.textContent = `${code} - ${name}`;
-                    select.appendChild(option);
-                }
-            });
-        }
-
-        function hideAllScreens() {
-            const screens = ['loginScreen', 'mainMenu', 'containersModule', 'salesModule', 'complaintsModule', 'notesModule', 'loadingScreen'];
-            screens.forEach(id => document.getElementById(id).classList.add('hidden'));
-        }
-
-        function openModule(module) {
-            currentModule = module;
-            hideAllScreens();
-            if (module === 'containers') {
-                document.getElementById('containersModule').classList.remove('hidden');
-                document.getElementById('loggedUserContainers').textContent = currentUser;
-                showContainersSubmenu();
-            } else if (module === 'sales') {
-                document.getElementById('salesModule').classList.remove('hidden');
-                document.getElementById('loggedUserSales').textContent = currentUser;
-            } else if (module === 'complaints') {
-                document.getElementById('complaintsModule').classList.remove('hidden');
-                document.getElementById('loggedUserComplaints').textContent = currentUser;
-            } else if (module === 'notes') {
-                document.getElementById('notesModule').classList.remove('hidden');
-                document.getElementById('loggedUserNotes').textContent = currentUser;
-            }
-        }
-
-        function backToMenu() {
-            if (currentModule === 'containers') containerStartOver();
-            else if (currentModule === 'sales') {
-                document.getElementById('salesClientSelect').value = '';
-                document.getElementById('salesDescription').value = '';
-                document.getElementById('salesMessage').classList.add('hidden');
-            } else if (currentModule === 'complaints') {
-                document.getElementById('complaintsClientSelect').value = '';
-                document.getElementById('complaintsDescription').value = '';
-                document.getElementById('complaintsMessage').classList.add('hidden');
-            } else if (currentModule === 'notes') {
-                document.getElementById('notesClientSelect').value = '';
-                document.getElementById('notesDescription').value = '';
-                document.getElementById('notesMessage').classList.add('hidden');
-            }
-            currentModule = null;
+    function checkLogin() {
+        const savedUser = localStorage.getItem('loggedUser');
+        if (savedUser) {
+            currentUser = savedUser;
             showMainMenu();
         }
+    }
 
-        function showContainersSubmenu() {
-            document.getElementById('containersSubmenu').classList.remove('hidden');
-            document.getElementById('balanceCheckScreen').classList.add('hidden');
-            document.getElementById('containerEntryScreens').classList.add('hidden');
+    function login() {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const errorDiv = document.getElementById('loginError');
+        if (!username || !password) {
+            errorDiv.textContent = 'Wypełnij wszystkie pola';
+            errorDiv.classList.remove('hidden');
+            return;
         }
-
-        function startNewEntry() {
-            document.getElementById('containersSubmenu').classList.add('hidden');
-            document.getElementById('containerEntryScreens').classList.remove('hidden');
-            containerGoToStep1();
+        if (CONFIG.USERS[username] && CONFIG.USERS[username] === password) {
+            currentUser = username;
+            localStorage.setItem('loggedUser', username);
+            errorDiv.classList.add('hidden');
+            showMainMenu();
+        } else {
+            errorDiv.textContent = 'Nieprawidłowa nazwa użytkownika lub hasło';
+            errorDiv.classList.remove('hidden');
         }
+    }
 
-        function showBalanceCheck() {
-            document.getElementById('containersSubmenu').classList.add('hidden');
-            document.getElementById('balanceCheckScreen').classList.remove('hidden');
-            document.getElementById('balanceResults').classList.add('hidden');
-            document.getElementById('balanceError').classList.add('hidden');
-            document.getElementById('balanceClientSelect').value = '';
-        }
+    function logout() {
+        localStorage.removeItem('loggedUser');
+        currentUser = null;
+        currentModule = null;
+        hideAllScreens();
+        document.getElementById('loginScreen').classList.remove('hidden');
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+    }
 
-        function backToContainersSubmenu() {
-            document.getElementById('balanceCheckScreen').classList.add('hidden');
-            document.getElementById('containerEntryScreens').classList.add('hidden');
-            showContainersSubmenu();
-        }
+    function showMainMenu() {
+        hideAllScreens();
+        document.getElementById('mainMenu').classList.remove('hidden');
+        document.getElementById('loggedUser').textContent = currentUser;
+    }
 
-        function containerGoToStep1() {
-            containerUpdateSteps(1);
-            containerShowScreen('containerScreen1');
-        }
-
-        function containerGoToStep2() {
-            const client = document.getElementById('containerClientSelect').value;
-            if (!client) { alert('Wybierz klienta'); return; }
-            containerUpdateSteps(2);
-            containerShowScreen('containerScreen2');
-        }
-
-        function containerGoToStep3() {
-            containerUpdateSteps(3);
-            containerShowScreen('containerScreen3');
-        }
-
-        function containerGoToStep4() {
-            containerUpdateSteps(4);
-            containerUpdateSummary();
-            containerShowScreen('containerScreen4');
-        }
-
-        function containerUpdateSteps(currentStep) {
-            for (let i = 1; i <= 4; i++) {
-                const step = document.getElementById(`containerStep${i}`);
-                if (i < currentStep) {
-                    step.classList.add('completed');
-                    step.classList.remove('active');
-                } else if (i === currentStep) {
-                    step.classList.add('active');
-                    step.classList.remove('completed');
-                } else {
-                    step.classList.remove('active', 'completed');
-                }
+    function populateClientSelects() {
+        const selects = ['containerClientSelect', 'salesClientSelect', 'complaintsClientSelect', 'balanceClientSelect', 'notesClientSelect'];
+        selects.forEach(selectId => {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+            for (const [code, name] of Object.entries(CLIENTS)) {
+                const option = document.createElement('option');
+                option.value = `${code} - ${name}`;
+                option.textContent = `${code} - ${name}`;
+                select.appendChild(option);
             }
-        }
-
-        function containerShowScreen(screenId) {
-            ['containerScreen1', 'containerScreen2', 'containerScreen3', 'containerScreen4'].forEach(id => {
-                document.getElementById(id).classList.add('hidden');
-            });
-            document.getElementById(screenId).classList.remove('hidden');
-        }
-
-        function containerUpdateSummary() {
-            document.getElementById('summaryClient').textContent = document.getElementById('containerClientSelect').value;
-            document.getElementById('summaryIssuedContainers').textContent = document.getElementById('issuedContainers').value;
-            document.getElementById('summaryIssuedExtensions').textContent = document.getElementById('issuedExtensions').value;
-            document.getElementById('summaryReturnedContainers').textContent = document.getElementById('returnedContainers').value;
-            document.getElementById('summaryReturnedExtensions').textContent = document.getElementById('returnedExtensions').value;
-        }
-
-        async function submitContainerData() {
-            const submitBtn = document.getElementById('containerSubmitBtn');
-            const messageDiv = document.getElementById('containerSubmitMessage');
-            submitBtn.disabled = true;
-            hideAllScreens();
-            document.getElementById('loadingScreen').classList.remove('hidden');
-            const params = new URLSearchParams({
-                module: 'containers',
-                timestamp: new Date().toLocaleString('pl-PL'),
-                user: currentUser,
-                client: document.getElementById('containerClientSelect').value,
-                issuedContainers: document.getElementById('issuedContainers').value,
-                issuedExtensions: document.getElementById('issuedExtensions').value,
-                returnedContainers: document.getElementById('returnedContainers').value,
-                returnedExtensions: document.getElementById('returnedExtensions').value
-            });
-            try {
-                await fetch(CONFIG.SHEET_URL + '?' + params.toString(), { method: 'GET', redirect: 'follow' });
-                document.getElementById('containersModule').classList.remove('hidden');
-                containerShowScreen('containerScreen4');
-                document.getElementById('loadingScreen').classList.add('hidden');
-                messageDiv.className = 'alert alert-success';
-                messageDiv.textContent = '✓ Dane zapisane pomyślnie!';
-                messageDiv.classList.remove('hidden');
-                setTimeout(() => containerStartOver(), 2000);
-            } catch (error) {
-                document.getElementById('containersModule').classList.remove('hidden');
-                containerShowScreen('containerScreen4');
-                document.getElementById('loadingScreen').classList.add('hidden');
-                messageDiv.className = 'alert alert-success';
-                messageDiv.textContent = '✓ Dane prawdopodobnie zapisane. Sprawdź arkusz.';
-                messageDiv.classList.remove('hidden');
-                setTimeout(() => containerStartOver(), 3000);
-            } finally {
-                submitBtn.disabled = false;
-            }
-        }
-
-        function containerStartOver() {
-            document.getElementById('containerClientSelect').value = '';
-            document.getElementById('issuedContainers').value = '0';
-            document.getElementById('issuedExtensions').value = '0';
-            document.getElementById('returnedContainers').value = '0';
-            document.getElementById('returnedExtensions').value = '0';
-            document.getElementById('containerSubmitMessage').classList.add('hidden');
-            containerGoToStep1();
-        }
-
-        async function submitSalesData() {
-            const client = document.getElementById('salesClientSelect').value;
-            const description = document.getElementById('salesDescription').value.trim();
-            const messageDiv = document.getElementById('salesMessage');
-            const submitBtn = document.getElementById('salesSubmitBtn');
-            if (!client) { alert('Wybierz klienta'); return; }
-            if (!description) { alert('Wpisz opis sprzedaży'); return; }
-            submitBtn.disabled = true;
-            hideAllScreens();
-            document.getElementById('loadingScreen').classList.remove('hidden');
-            const params = new URLSearchParams({
-                module: 'sales',
-                timestamp: new Date().toLocaleString('pl-PL'),
-                user: currentUser,
-                client: client,
-                description: description
-            });
-            try {
-                await fetch(CONFIG.SHEET_URL + '?' + params.toString(), { method: 'GET', redirect: 'follow' });
-                document.getElementById('salesModule').classList.remove('hidden');
-                document.getElementById('loadingScreen').classList.add('hidden');
-                messageDiv.className = 'alert alert-success';
-                messageDiv.textContent = '✓ Sprzedaż zapisana pomyślnie!';
-                messageDiv.classList.remove('hidden');
-                setTimeout(() => {
-                    document.getElementById('salesClientSelect').value = '';
-                    document.getElementById('salesDescription').value = '';
-                    messageDiv.classList.add('hidden');
-                }, 2000);
-            } catch (error) {
-                document.getElementById('salesModule').classList.remove('hidden');
-                document.getElementById('loadingScreen').classList.add('hidden');
-                messageDiv.className = 'alert alert-success';
-                messageDiv.textContent = '✓ Sprzedaż prawdopodobnie zapisana. Sprawdź arkusz.';
-                messageDiv.classList.remove('hidden');
-            } finally {
-                submitBtn.disabled = false;
-            }
-        }
-
-        async function submitComplaintsData() {
-            const client = document.getElementById('complaintsClientSelect').value;
-            const description = document.getElementById('complaintsDescription').value.trim();
-            const messageDiv = document.getElementById('complaintsMessage');
-            const submitBtn = document.getElementById('complaintsSubmitBtn');
-            if (!client) { alert('Wybierz klienta'); return; }
-            if (!description) { alert('Wpisz opis reklamacji'); return; }
-            submitBtn.disabled = true;
-            hideAllScreens();
-            document.getElementById('loadingScreen').classList.remove('hidden');
-            const params = new URLSearchParams({
-                module: 'complaints',
-                timestamp: new Date().toLocaleString('pl-PL'),
-                user: currentUser,
-                client: client,
-                description: description
-            });
-            try {
-                await fetch(CONFIG.SHEET_URL + '?' + params.toString(), { method: 'GET', redirect: 'follow' });
-                document.getElementById('complaintsModule').classList.remove('hidden');
-                document.getElementById('loadingScreen').classList.add('hidden');
-                messageDiv.className = 'alert alert-success';
-                messageDiv.textContent = '✓ Reklamacja zapisana pomyślnie!';
-                messageDiv.classList.remove('hidden');
-                setTimeout(() => {
-                    document.getElementById('complaintsClientSelect').value = '';
-                    document.getElementById('complaintsDescription').value = '';
-                    messageDiv.classList.add('hidden');
-                }, 2000);
-            } catch (error) {
-                document.getElementById('complaintsModule').classList.remove('hidden');
-                document.getElementById('loadingScreen').classList.add('hidden');
-                messageDiv.className = 'alert alert-success';
-                messageDiv.textContent = '✓ Reklamacja prawdopodobnie zapisana. Sprawdź arkusz.';
-                messageDiv.classList.remove('hidden');
-            } finally {
-                submitBtn.disabled = false;
-            }
-        }
-
-        async function fetchBalance() {
-            const client = document.getElementById('balanceClientSelect').value;
-            if (!client) {
-                document.getElementById('balanceResults').classList.add('hidden');
-                document.getElementById('balanceError').classList.add('hidden');
-                return;
-            }
-            const clientCode = client.split(' - ')[0];
-            const clientName = client;
-            document.getElementById('balanceLoading').classList.remove('hidden');
-            document.getElementById('balanceResults').classList.add('hidden');
-            document.getElementById('balanceError').classList.add('hidden');
-            try {
-                const params = new URLSearchParams({ action: 'getBalance', clientCode: clientCode });
-                const response = await fetch(CONFIG.SHEET_URL + '?' + params.toString(), { method: 'GET', redirect: 'follow' });
-                const result = await response.json();
-                document.getElementById('balanceLoading').classList.add('hidden');
-                if (result.status === 'success') {
-                    const data = result.data;
-                    document.getElementById('balanceClientName').textContent = clientName;
-                    document.getElementById('balanceTotalIssued').textContent = data.totalIssued;
-                    document.getElementById('balanceTotalIssuedExt').textContent = data.totalIssuedExt;
-                    document.getElementById('balanceTotalReturned').textContent = data.totalReturned;
-                    document.getElementById('balanceTotalReturnedExt').textContent = data.totalReturnedExt;
-                    
-                    // POPRAWIONA LOGIKA: wydane - zwrócone = u klienta
-                    const atClient = data.totalIssued - data.totalReturned;
-                    const atClientExt = data.totalIssuedExt - data.totalReturnedExt;
-                    
-                    document.getElementById('balanceContainers').textContent = atClient;
-                    document.getElementById('balanceExtensions').textContent = atClientExt;
-                    document.getElementById('balanceLastUpdate').textContent = 'Zaktualizowano: ' + new Date().toLocaleString('pl-PL');
-                    
-                    const containerCard = document.getElementById('balanceContainersCard');
-                    const extensionCard = document.getElementById('balanceExtensionsCard');
-                    
-                    // Czerwone = klient ma nasze pojemniki (źle)
-                    // Zielone = wszystko zwrócone (dobrze)
-                    // Żółte = zero (neutralnie)
-                    if (atClient > 0) {
-                        containerCard.style.background = 'linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%)';
-                        containerCard.style.borderColor = '#dc3545';
-                        containerCard.querySelector('div:first-child').style.color = '#721c24';
-                        document.getElementById('balanceContainers').style.color = '#721c24';
-                    } else if (atClient < 0) {
-                        containerCard.style.background = 'linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%)';
-                        containerCard.style.borderColor = '#ffc107';
-                        containerCard.querySelector('div:first-child').style.color = '#856404';
-                        document.getElementById('balanceContainers').style.color = '#856404';
-                    } else {
-                        containerCard.style.background = 'linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%)';
-                        containerCard.style.borderColor = '#28a745';
-                        containerCard.querySelector('div:first-child').style.color = '#155724';
-                        document.getElementById('balanceContainers').style.color = '#155724';
-                    }
-                    
-                    if (atClientExt > 0) {
-                        extensionCard.style.background = 'linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%)';
-                        extensionCard.style.borderColor = '#dc3545';
-                        extensionCard.querySelector('div:first-child').style.color = '#721c24';
-                        document.getElementById('balanceExtensions').style.color = '#721c24';
-                    } else if (atClientExt < 0) {
-                        extensionCard.style.background = 'linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%)';
-                        extensionCard.style.borderColor = '#ffc107';
-                        extensionCard.querySelector('div:first-child').style.color = '#856404';
-                        document.getElementById('balanceExtensions').style.color = '#856404';
-                    } else {
-                        extensionCard.style.background = 'linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%)';
-                        extensionCard.style.borderColor = '#28a745';
-                        extensionCard.querySelector('div:first-child').style.color = '#155724';
-                        document.getElementById('balanceExtensions').style.color = '#155724';
-                    }
-                    
-                    document.getElementById('balanceResults').classList.remove('hidden');
-                } else {
-                    throw new Error(result.message || 'Błąd podczas pobierania danych');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('balanceLoading').classList.add('hidden');
-                document.getElementById('balanceError').textContent = 'Błąd podczas pobierania salda. Sprawdź połączenie.';
-                document.getElementById('balanceError').classList.remove('hidden');
-            }
-        }
-
-        async function submitNotesData() {
-            const client = document.getElementById('notesClientSelect').value;
-            const description = document.getElementById('notesDescription').value.trim();
-            const messageDiv = document.getElementById('notesMessage');
-            const submitBtn = document.getElementById('notesSubmitBtn');
-            if (!description) { alert('Wpisz treść notatki'); return; }
-            submitBtn.disabled = true;
-            hideAllScreens();
-            document.getElementById('loadingScreen').classList.remove('hidden');
-            const params = new URLSearchParams({
-                module: 'notes',
-                timestamp: new Date().toLocaleString('pl-PL'),
-                user: currentUser,
-                client: client || 'Ogólna',
-                description: description
-            });
-            try {
-                await fetch(CONFIG.SHEET_URL + '?' + params.toString(), { method: 'GET', redirect: 'follow' });
-                document.getElementById('notesModule').classList.remove('hidden');
-                document.getElementById('loadingScreen').classList.add('hidden');
-                messageDiv.className = 'alert alert-success';
-                messageDiv.textContent = '✓ Notatka zapisana pomyślnie!';
-                messageDiv.classList.remove('hidden');
-                setTimeout(() => {
-                    document.getElementById('notesClientSelect').value = '';
-                    document.getElementById('notesDescription').value = '';
-                    messageDiv.classList.add('hidden');
-                }, 2000);
-            } catch (error) {
-                document.getElementById('notesModule').classList.remove('hidden');
-                document.getElementById('loadingScreen').classList.add('hidden');
-                messageDiv.className = 'alert alert-success';
-                messageDiv.textContent = '✓ Notatka prawdopodobnie zapisana. Sprawdź arkusz.';
-                messageDiv.classList.remove('hidden');
-            } finally {
-                submitBtn.disabled = false;
-            }
-        }
-
-        document.getElementById('password').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') login();
         });
-    </script>
+    }
+
+    function hideAllScreens() {
+        const screens = ['loginScreen', 'mainMenu', 'containersModule', 'salesModule', 'complaintsModule', 'notesModule', 'loadingScreen'];
+        screens.forEach(id => document.getElementById(id).classList.add('hidden'));
+    }
+
+    function openModule(module) {
+        currentModule = module;
+        hideAllScreens();
+        if (module === 'containers') {
+            document.getElementById('containersModule').classList.remove('hidden');
+            document.getElementById('loggedUserContainers').textContent = currentUser;
+            showContainersSubmenu();
+        } else if (module === 'sales') {
+            document.getElementById('salesModule').classList.remove('hidden');
+            document.getElementById('loggedUserSales').textContent = currentUser;
+        } else if (module === 'complaints') {
+            document.getElementById('complaintsModule').classList.remove('hidden');
+            document.getElementById('loggedUserComplaints').textContent = currentUser;
+        } else if (module === 'notes') {
+            document.getElementById('notesModule').classList.remove('hidden');
+            document.getElementById('loggedUserNotes').textContent = currentUser;
+        }
+    }
+
+    function backToMenu() {
+        if (currentModule === 'containers') containerStartOver();
+        else if (currentModule === 'sales') {
+            document.getElementById('salesClientSelect').value = '';
+            document.getElementById('salesDescription').value = '';
+            document.getElementById('salesMessage').classList.add('hidden');
+        } else if (currentModule === 'complaints') {
+            document.getElementById('complaintsClientSelect').value = '';
+            document.getElementById('complaintsDescription').value = '';
+            document.getElementById('complaintsMessage').classList.add('hidden');
+        } else if (currentModule === 'notes') {
+            document.getElementById('notesClientSelect').value = '';
+            document.getElementById('notesDescription').value = '';
+            document.getElementById('notesMessage').classList.add('hidden');
+        }
+        currentModule = null;
+        showMainMenu();
+    }
+
+    function showContainersSubmenu() {
+        document.getElementById('containersSubmenu').classList.remove('hidden');
+        document.getElementById('balanceCheckScreen').classList.add('hidden');
+        document.getElementById('containerEntryScreens').classList.add('hidden');
+    }
+
+    function startNewEntry() {
+        document.getElementById('containersSubmenu').classList.add('hidden');
+        document.getElementById('containerEntryScreens').classList.remove('hidden');
+        containerGoToStep1();
+    }
+
+    function showBalanceCheck() {
+        document.getElementById('containersSubmenu').classList.add('hidden');
+        document.getElementById('balanceCheckScreen').classList.remove('hidden');
+        document.getElementById('balanceResults').classList.add('hidden');
+        document.getElementById('balanceError').classList.add('hidden');
+        document.getElementById('balanceClientSelect').value = '';
+    }
+
+    function backToContainersSubmenu() {
+        document.getElementById('balanceCheckScreen').classList.add('hidden');
+        document.getElementById('containerEntryScreens').classList.add('hidden');
+        showContainersSubmenu();
+    }
+
+    function containerGoToStep1() {
+        containerUpdateSteps(1);
+        containerShowScreen('containerScreen1');
+    }
+
+    function containerGoToStep2() {
+        const client = document.getElementById('containerClientSelect').value;
+        if (!client) { alert('Wybierz klienta'); return; }
+        containerUpdateSteps(2);
+        containerShowScreen('containerScreen2');
+    }
+
+    function containerGoToStep3() {
+        containerUpdateSteps(3);
+        containerShowScreen('containerScreen3');
+    }
+
+    function containerGoToStep4() {
+        containerUpdateSteps(4);
+        containerUpdateSummary();
+        containerShowScreen('containerScreen4');
+    }
+
+    function containerUpdateSteps(currentStep) {
+        for (let i = 1; i <= 4; i++) {
+            const step = document.getElementById(`containerStep${i}`);
+            if (i < currentStep) {
+                step.classList.add('completed');
+                step.classList.remove('active');
+            } else if (i === currentStep) {
+                step.classList.add('active');
+                step.classList.remove('completed');
+            } else {
+                step.classList.remove('active', 'completed');
+            }
+        }
+    }
+
+    function containerShowScreen(screenId) {
+        ['containerScreen1', 'containerScreen2', 'containerScreen3', 'containerScreen4'].forEach(id => {
+            document.getElementById(id).classList.add('hidden');
+        });
+        document.getElementById(screenId).classList.remove('hidden');
+    }
+
+    function containerUpdateSummary() {
+        document.getElementById('summaryClient').textContent = document.getElementById('containerClientSelect').value;
+        document.getElementById('summaryIssuedContainers').textContent = document.getElementById('issuedContainers').value;
+        document.getElementById('summaryIssuedExtensions').textContent = document.getElementById('issuedExtensions').value;
+        document.getElementById('summaryReturnedContainers').textContent = document.getElementById('returnedContainers').value;
+        document.getElementById('summaryReturnedExtensions').textContent = document.getElementById('returnedExtensions').value;
+    }
+
+    async function submitContainerData() {
+        const submitBtn = document.getElementById('containerSubmitBtn');
+        const messageDiv = document.getElementById('containerSubmitMessage');
+        submitBtn.disabled = true;
+        hideAllScreens();
+        document.getElementById('loadingScreen').classList.remove('hidden');
+        const params = new URLSearchParams({
+            module: 'containers',
+            timestamp: new Date().toLocaleString('pl-PL'),
+            user: currentUser,
+            client: document.getElementById('containerClientSelect').value,
+            issuedContainers: document.getElementById('issuedContainers').value,
+            issuedExtensions: document.getElementById('issuedExtensions').value,
+            returnedContainers: document.getElementById('returnedContainers').value,
+            returnedExtensions: document.getElementById('returnedExtensions').value
+        });
+        try {
+            await fetch(CONFIG.SHEET_URL + '?' + params.toString(), { method: 'GET', redirect: 'follow' });
+            document.getElementById('containersModule').classList.remove('hidden');
+            containerShowScreen('containerScreen4');
+            document.getElementById('loadingScreen').classList.add('hidden');
+            messageDiv.className = 'alert alert-success';
+            messageDiv.textContent = '✓ Dane zapisane pomyślnie!';
+            messageDiv.classList.remove('hidden');
+            setTimeout(() => containerStartOver(), 2000);
+        } catch (error) {
+            document.getElementById('containersModule').classList.remove('hidden');
+            containerShowScreen('containerScreen4');
+            document.getElementById('loadingScreen').classList.add('hidden');
+            messageDiv.className = 'alert alert-success';
+            messageDiv.textContent = '✓ Dane prawdopodobnie zapisane. Sprawdź arkusz.';
+            messageDiv.classList.remove('hidden');
+            setTimeout(() => containerStartOver(), 3000);
+        } finally {
+            submitBtn.disabled = false;
+        }
+    }
+
+    function containerStartOver() {
+        document.getElementById('containerClientSelect').value = '';
+        document.getElementById('issuedContainers').value = '0';
+        document.getElementById('issuedExtensions').value = '0';
+        document.getElementById('returnedContainers').value = '0';
+        document.getElementById('returnedExtensions').value = '0';
+        document.getElementById('containerSubmitMessage').classList.add('hidden');
+        containerGoToStep1();
+    }
+
+    async function submitSalesData() {
+        const client = document.getElementById('salesClientSelect').value;
+        const description = document.getElementById('salesDescription').value.trim();
+        const messageDiv = document.getElementById('salesMessage');
+        const submitBtn = document.getElementById('salesSubmitBtn');
+        if (!client) { alert('Wybierz klienta'); return; }
+        if (!description) { alert('Wpisz opis sprzedaży'); return; }
+        submitBtn.disabled = true;
+        hideAllScreens();
+        document.getElementById('loadingScreen').classList.remove('hidden');
+        const params = new URLSearchParams({
+            module: 'sales',
+            timestamp: new Date().toLocaleString('pl-PL'),
+            user: currentUser,
+            client: client,
+            description: description
+        });
+        try {
+            await fetch(CONFIG.SHEET_URL + '?' + params.toString(), { method: 'GET', redirect: 'follow' });
+            document.getElementById('salesModule').classList.remove('hidden');
+            document.getElementById('loadingScreen').classList.add('hidden');
+            messageDiv.className = 'alert alert-success';
+            messageDiv.textContent = '✓ Sprzedaż zapisana pomyślnie!';
+            messageDiv.classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('salesClientSelect').value = '';
+                document.getElementById('salesDescription').value = '';
+                messageDiv.classList.add('hidden');
+            }, 2000);
+        } catch (error) {
+            document.getElementById('salesModule').classList.remove('hidden');
+            document.getElementById('loadingScreen').classList.add('hidden');
+            messageDiv.className = 'alert alert-success';
+            messageDiv.textContent = '✓ Sprzedaż prawdopodobnie zapisana. Sprawdź arkusz.';
+            messageDiv.classList.remove('hidden');
+        } finally {
+            submitBtn.disabled = false;
+        }
+    }
+
+    async function submitComplaintsData() {
+        const client = document.getElementById('complaintsClientSelect').value;
+        const description = document.getElementById('complaintsDescription').value.trim();
+        const messageDiv = document.getElementById('complaintsMessage');
+        const submitBtn = document.getElementById('complaintsSubmitBtn');
+        if (!client) { alert('Wybierz klienta'); return; }
+        if (!description) { alert('Wpisz opis reklamacji'); return; }
+        submitBtn.disabled = true;
+        hideAllScreens();
+        document.getElementById('loadingScreen').classList.remove('hidden');
+        const params = new URLSearchParams({
+            module: 'complaints',
+            timestamp: new Date().toLocaleString('pl-PL'),
+            user: currentUser,
+            client: client,
+            description: description
+        });
+        try {
+            await fetch(CONFIG.SHEET_URL + '?' + params.toString(), { method: 'GET', redirect: 'follow' });
+            document.getElementById('complaintsModule').classList.remove('hidden');
+            document.getElementById('loadingScreen').classList.add('hidden');
+            messageDiv.className = 'alert alert-success';
+            messageDiv.textContent = '✓ Reklamacja zapisana pomyślnie!';
+            messageDiv.classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('complaintsClientSelect').value = '';
+                document.getElementById('complaintsDescription').value = '';
+                messageDiv.classList.add('hidden');
+            }, 2000);
+        } catch (error) {
+            document.getElementById('complaintsModule').classList.remove('hidden');
+            document.getElementById('loadingScreen').classList.add('hidden');
+            messageDiv.className = 'alert alert-success';
+            messageDiv.textContent = '✓ Reklamacja prawdopodobnie zapisana. Sprawdź arkusz.';
+            messageDiv.classList.remove('hidden');
+        } finally {
+            submitBtn.disabled = false;
+        }
+    }
+
+    async function fetchBalance() {
+        const client = document.getElementById('balanceClientSelect').value;
+        if (!client) {
+            document.getElementById('balanceResults').classList.add('hidden');
+            document.getElementById('balanceError').classList.add('hidden');
+            return;
+        }
+        const clientCode = client.split(' - ')[0];
+        const clientName = client;
+        document.getElementById('balanceLoading').classList.remove('hidden');
+        document.getElementById('balanceResults').classList.add('hidden');
+        document.getElementById('balanceError').classList.add('hidden');
+        try {
+            const params = new URLSearchParams({ action: 'getBalance', clientCode: clientCode });
+            const response = await fetch(CONFIG.SHEET_URL + '?' + params.toString(), { method: 'GET', redirect: 'follow' });
+            const result = await response.json();
+            document.getElementById('balanceLoading').classList.add('hidden');
+            if (result.status === 'success') {
+                const data = result.data;
+                document.getElementById('balanceClientName').textContent = clientName;
+                document.getElementById('balanceTotalIssued').textContent = data.totalIssued;
+                document.getElementById('balanceTotalIssuedExt').textContent = data.totalIssuedExt;
+                document.getElementById('balanceTotalReturned').textContent = data.totalReturned;
+                document.getElementById('balanceTotalReturnedExt').textContent = data.totalReturnedExt;
+                
+                // POPRAWIONA LOGIKA: wydane - zwrócone = u klienta
+                const atClient = data.totalIssued - data.totalReturned;
+                const atClientExt = data.totalIssuedExt - data.totalReturnedExt;
+                
+                document.getElementById('balanceContainers').textContent = atClient;
+                document.getElementById('balanceExtensions').textContent = atClientExt;
+                document.getElementById('balanceLastUpdate').textContent = 'Zaktualizowano: ' + new Date().toLocaleString('pl-PL');
+                
+                const containerCard = document.getElementById('balanceContainersCard');
+                const extensionCard = document.getElementById('balanceExtensionsCard');
+                
+                // Czerwone = klient ma nasze pojemniki (źle)
+                // Zielone = wszystko zwrócone (dobrze)
+                // Żółte = zero (neutralnie)
+                if (atClient > 0) {
+                    containerCard.style.background = 'linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%)';
+                    containerCard.style.borderColor = '#dc3545';
+                    containerCard.querySelector('div:first-child').style.color = '#721c24';
+                    document.getElementById('balanceContainers').style.color = '#721c24';
+                } else if (atClient < 0) {
+                    containerCard.style.background = 'linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%)';
+                    containerCard.style.borderColor = '#ffc107';
+                    containerCard.querySelector('div:first-child').style.color = '#856404';
+                    document.getElementById('balanceContainers').style.color = '#856404';
+                } else {
+                    containerCard.style.background = 'linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%)';
+                    containerCard.style.borderColor = '#28a745';
+                    containerCard.querySelector('div:first-child').style.color = '#155724';
+                    document.getElementById('balanceContainers').style.color = '#155724';
+                }
+                
+                if (atClientExt > 0) {
+                    extensionCard.style.background = 'linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%)';
+                    extensionCard.style.borderColor = '#dc3545';
+                    extensionCard.querySelector('div:first-child').style.color = '#721c24';
+                    document.getElementById('balanceExtensions').style.color = '#721c24';
+                } else if (atClientExt < 0) {
+                    extensionCard.style.background = 'linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%)';
+                    extensionCard.style.borderColor = '#ffc107';
+                    extensionCard.querySelector('div:first-child').style.color = '#856404';
+                    document.getElementById('balanceExtensions').style.color = '#856404';
+                } else {
+                    extensionCard.style.background = 'linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%)';
+                    extensionCard.style.borderColor = '#28a745';
+                    extensionCard.querySelector('div:first-child').style.color = '#155724';
+                    document.getElementById('balanceExtensions').style.color = '#155724';
+                }
+                
+                document.getElementById('balanceResults').classList.remove('hidden');
+            } else {
+                throw new Error(result.message || 'Błąd podczas pobierania danych');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('balanceLoading').classList.add('hidden');
+            document.getElementById('balanceError').textContent = 'Błąd podczas pobierania salda. Sprawdź połączenie.';
+            document.getElementById('balanceError').classList.remove('hidden');
+        }
+    }
+
+    async function submitNotesData() {
+        const client = document.getElementById('notesClientSelect').value;
+        const description = document.getElementById('notesDescription').value.trim();
+        const messageDiv = document.getElementById('notesMessage');
+        const submitBtn = document.getElementById('notesSubmitBtn');
+        if (!description) { alert('Wpisz treść notatki'); return; }
+        submitBtn.disabled = true;
+        hideAllScreens();
+        document.getElementById('loadingScreen').classList.remove('hidden');
+        const params = new URLSearchParams({
+            module: 'notes',
+            timestamp: new Date().toLocaleString('pl-PL'),
+            user: currentUser,
+            client: client || 'Ogólna',
+            description: description
+        });
+        try {
+            await fetch(CONFIG.SHEET_URL + '?' + params.toString(), { method: 'GET', redirect: 'follow' });
+            document.getElementById('notesModule').classList.remove('hidden');
+            document.getElementById('loadingScreen').classList.add('hidden');
+            messageDiv.className = 'alert alert-success';
+            messageDiv.textContent = '✓ Notatka zapisana pomyślnie!';
+            messageDiv.classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('notesClientSelect').value = '';
+                document.getElementById('notesDescription').value = '';
+                messageDiv.classList.add('hidden');
+            }, 2000);
+        } catch (error) {
+            document.getElementById('notesModule').classList.remove('hidden');
+            document.getElementById('loadingScreen').classList.add('hidden');
+            messageDiv.className = 'alert alert-success';
+            messageDiv.textContent = '✓ Notatka prawdopodobnie zapisana. Sprawdź arkusz.';
+            messageDiv.classList.remove('hidden');
+        } finally {
+            submitBtn.disabled = false;
+        }
+    }
+
+    document.getElementById('password').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') login();
+    });
+</script>
 </body>
 </html>
