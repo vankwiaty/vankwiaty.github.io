@@ -309,6 +309,29 @@
             background: linear-gradient(135deg, #e67700 0%, #f08c00 100%);
             margin-top: 10px;
         }
+        .delivery-issue-banner {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            color: #721c24;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        .delivery-issue-banner strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+        .delivery-admin-note-panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .delivery-admin-note-panel textarea {
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -655,7 +678,8 @@
                     <div id="deliveriesAdminControls" class="hidden">
                         <div class="delivery-scope-tabs">
                             <button type="button" id="scopePendingBtn" class="active" onclick="setDeliveriesScope('pending')">Oczekujące</button>
-                            <button type="button" id="scopeAwaitingAdminBtn" onclick="setDeliveriesScope('awaitingAdmin')">Do potwierdzenia</button>
+                            <button type="button" id="scopeProblemsBtn" onclick="setDeliveriesScope('problems')">Problemy</button>
+                            <button type="button" id="scopeAwaitingAdminBtn" onclick="setDeliveriesScope('awaitingAdmin')">Do finalizacji</button>
                             <button type="button" id="scopeAllBtn" onclick="setDeliveriesScope('all')">Wszystkie</button>
                         </div>
                         <button type="button" class="btn-success-delivery" onclick="showDeliveryCreateForm()" style="margin-bottom: 15px;">+ Dodaj dostawę</button>
@@ -686,7 +710,15 @@
                     </div>
                     <h4 style="margin-bottom: 10px; color: #333;">Pozycje</h4>
                     <div id="detailItems" class="delivery-lines"></div>
+                    <div id="deliveryIssueBanner" class="delivery-issue-banner hidden"></div>
                     <div id="detailReceiptInfo" class="hidden" style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 15px;"></div>
+                    <div id="deliveryAdminNotePanel" class="delivery-admin-note-panel hidden">
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="deliveryAdminNoteInput">Notatka admina</label>
+                            <textarea id="deliveryAdminNoteInput" placeholder="Wpisz notatkę do zgłoszenia / obsługi dostawy"></textarea>
+                        </div>
+                        <button type="button" class="btn-success-delivery" onclick="saveDeliveryAdminNote()" id="saveAdminNoteBtn">Zapisz notatkę</button>
+                    </div>
                     <div id="deliveryActions"></div>
                     <div id="deliveryIssueForm" class="hidden">
                         <div class="form-group">
@@ -736,14 +768,9 @@
     <script>
         const CONFIG = {
             SHEET_URL: 'https://script.google.com/macros/s/AKfycbyOxMlURePFsIXWAS1XE1N12l6P0IdpVyVc7qzP7SDsNI2gff-nEDK8bBxAG_xX8Jfw/exec',
-            USERS: {
-                'admin': 'a15f8ae07675bfb96e084bfb4f52fb2c22091061aae86e0eb76a55f4e52dd74e',
-                'jan': '2e0e339c8d5f9772c21a9111e1269ec004e9d93fa9cdde48c654b59033f20bb5',
-                'anna': '7f92063f461ca1991c0f734dca11d2c98d30e14f08c0e5a7f8e631eca3bc1b52',
-                'tom': '113a21ce998ed55c7a8e569a64e3f9dcef9e8be6a5feff9cc7858d625b404dfa',
-                'mikolaj': 'b266db9649984b4dd680ab7dd39fb64f2ce4ec3f154bfb588bc44eacb84e39a0',
-                'anita': '83d02340f51606385f49880ae87d293c193b110ab262e0a5d726531fc904d6f6'
-            }
+            SESSION_KEY: 'sessionToken',
+            USER_KEY: 'loggedUser',
+            EXPIRES_KEY: 'sessionExpiresAt'
         };
 
         const DEFAULT_CLIENTS = {
@@ -754,26 +781,81 @@
 
         let CLIENTS = { ...DEFAULT_CLIENTS };
         let currentUser = null;
+        let sessionToken = null;
         let currentModule = null;
         let clientsSynced = false;
         let deliveriesScope = 'pending';
         let currentDeliveryId = null;
         let deliveryLineCounter = 0;
 
-        async function hashPassword(password) {
-            const data = new TextEncoder().encode(password);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-            return Array.from(new Uint8Array(hashBuffer))
-                .map(b => b.toString(16).padStart(2, '0'))
-                .join('');
+        function getStoredSession() {
+            return {
+                token: localStorage.getItem(CONFIG.SESSION_KEY) || '',
+                user: localStorage.getItem(CONFIG.USER_KEY) || '',
+                expiresAt: Number(localStorage.getItem(CONFIG.EXPIRES_KEY) || 0)
+            };
+        }
+
+        function saveSession(token, user, expiresAt) {
+            sessionToken = token;
+            currentUser = user;
+            localStorage.setItem(CONFIG.SESSION_KEY, token);
+            localStorage.setItem(CONFIG.USER_KEY, user);
+            if (expiresAt) localStorage.setItem(CONFIG.EXPIRES_KEY, String(expiresAt));
+        }
+
+        function clearSessionLocal() {
+            sessionToken = null;
+            currentUser = null;
+            localStorage.removeItem(CONFIG.SESSION_KEY);
+            localStorage.removeItem(CONFIG.USER_KEY);
+            localStorage.removeItem(CONFIG.EXPIRES_KEY);
+            // legacy key
+            localStorage.removeItem('loggedUser');
+        }
+
+        function handleAuthFailure(result) {
+            const code = result && result.code;
+            if (code === 'UNAUTHORIZED' || code === 'SESSION_EXPIRED') {
+                clearSessionLocal();
+                hideAllScreens();
+                document.getElementById('loginScreen').classList.remove('hidden');
+                const errorDiv = document.getElementById('loginError');
+                errorDiv.textContent = code === 'SESSION_EXPIRED'
+                    ? 'Sesja wygasła — zaloguj się ponownie'
+                    : 'Wymagane logowanie';
+                errorDiv.classList.remove('hidden');
+                return true;
+            }
+            return false;
         }
 
         async function apiGet(params) {
-            const response = await fetch(CONFIG.SHEET_URL + '?' + new URLSearchParams(params).toString(), {
+            const p = { ...(params || {}) };
+            delete p.user;
+            if (sessionToken) p.sessionToken = sessionToken;
+            const response = await fetch(CONFIG.SHEET_URL + '?' + new URLSearchParams(p).toString(), {
                 method: 'GET',
                 redirect: 'follow'
             });
-            return response.json();
+            const result = await response.json();
+            if (result && result.status === 'error') handleAuthFailure(result);
+            return result;
+        }
+
+        async function apiPost(body) {
+            // text/plain unika preflight CORS przy GAS Web App
+            const response = await fetch(CONFIG.SHEET_URL, {
+                method: 'POST',
+                redirect: 'follow',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(body)
+            });
+            const result = await response.json();
+            if (result && result.status === 'error' && body && body.module !== 'auth') {
+                handleAuthFailure(result);
+            }
+            return result;
         }
 
         function applyClients(clientsMap) {
@@ -786,13 +868,18 @@
         }
 
         async function loadClientsFromServer() {
+            if (!sessionToken) {
+                CLIENTS = { ...DEFAULT_CLIENTS };
+                populateClientSelects();
+                return false;
+            }
             try {
                 const result = await apiGet({ module: 'clients', clientsAction: 'list' });
                 if (result.status === 'success' && result.data && result.data.clients) {
                     applyClients(result.data.clients);
                     return true;
                 }
-                console.warn('Lista klientów niedostępna na serwerze – używam listy domyślnej. Wdróż google-apps-script/klienci-api.gs.', result);
+                console.warn('Lista klientów niedostępna na serwerze', result);
             } catch (e) {
                 console.warn('Nie udało się pobrać klientów z serwera', e);
             }
@@ -805,16 +892,36 @@
         }
 
         document.addEventListener('DOMContentLoaded', async function() {
-            await loadClientsFromServer();
-            checkLogin();
+            await restoreSession();
         });
 
-        function checkLogin() {
-            const savedUser = localStorage.getItem('loggedUser');
-            if (savedUser && CONFIG.USERS[savedUser]) {
-                currentUser = savedUser;
-                showMainMenu();
+        async function restoreSession() {
+            const stored = getStoredSession();
+            if (!stored.token) {
+                clearSessionLocal();
+                return;
             }
+            if (stored.expiresAt && Date.now() > stored.expiresAt) {
+                clearSessionLocal();
+                return;
+            }
+            sessionToken = stored.token;
+            currentUser = stored.user || null;
+            try {
+                const result = await apiGet({ module: 'auth', authAction: 'me' });
+                if (result.status === 'success' && result.data && result.data.user) {
+                    currentUser = result.data.user;
+                    if (result.data.expiresAt) {
+                        localStorage.setItem(CONFIG.EXPIRES_KEY, String(result.data.expiresAt));
+                    }
+                    localStorage.setItem(CONFIG.USER_KEY, currentUser);
+                    showMainMenu();
+                    return;
+                }
+            } catch (e) {
+                console.warn('Nie udało się odtworzyć sesji', e);
+            }
+            clearSessionLocal();
         }
 
         async function login() {
@@ -826,26 +933,42 @@
                 errorDiv.classList.remove('hidden');
                 return;
             }
-            const passwordHash = await hashPassword(password);
-            if (CONFIG.USERS[username] && CONFIG.USERS[username] === passwordHash) {
-                currentUser = username;
-                localStorage.setItem('loggedUser', username);
-                errorDiv.classList.add('hidden');
-                showMainMenu();
-            } else {
-                errorDiv.textContent = 'Nieprawidłowa nazwa użytkownika lub hasło';
+            try {
+                const result = await apiPost({
+                    module: 'auth',
+                    action: 'login',
+                    username: username,
+                    password: password
+                });
+                if (result.status === 'success' && result.data && result.data.sessionToken) {
+                    saveSession(result.data.sessionToken, result.data.user, result.data.expiresAt);
+                    errorDiv.classList.add('hidden');
+                    document.getElementById('password').value = '';
+                    showMainMenu();
+                } else {
+                    errorDiv.textContent = (result && result.message) || 'Nieprawidłowa nazwa użytkownika lub hasło';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (e) {
+                errorDiv.textContent = 'Błąd połączenia podczas logowania';
                 errorDiv.classList.remove('hidden');
             }
         }
 
-        function logout() {
-            localStorage.removeItem('loggedUser');
-            currentUser = null;
+        async function logout() {
+            const token = sessionToken;
+            try {
+                if (token) {
+                    await apiGet({ module: 'auth', authAction: 'logout', sessionToken: token });
+                }
+            } catch (e) { /* ignore */ }
+            clearSessionLocal();
             currentModule = null;
             hideAllScreens();
             document.getElementById('loginScreen').classList.remove('hidden');
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
+            document.getElementById('loginError').classList.add('hidden');
         }
 
         function showMainMenu() {
@@ -887,7 +1010,9 @@
             sortedClients.forEach(([code, name]) => {
                 const item = document.createElement('div');
                 item.className = 'client-item';
-                item.innerHTML = `<span>${code} - ${name}</span>`;
+                const label = document.createElement('span');
+                label.textContent = code + ' - ' + name;
+                item.appendChild(label);
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'btn-delete';
                 deleteBtn.textContent = 'Usuń';
@@ -922,7 +1047,6 @@
                     clientsAction: 'add',
                     code: code,
                     name: name,
-                    user: currentUser
                 });
                 if (result.status === 'success' && result.data && result.data.clients) {
                     applyClients(result.data.clients);
@@ -944,7 +1068,6 @@
                     module: 'clients',
                     clientsAction: 'remove',
                     code: code,
-                    user: currentUser
                 });
                 if (result.status === 'success' && result.data && result.data.clients) {
                     applyClients(result.data.clients);
@@ -1108,18 +1231,16 @@
             submitBtn.disabled = true;
             hideAllScreens();
             document.getElementById('loadingScreen').classList.remove('hidden');
-            const params = new URLSearchParams({
-                module: 'containers',
-                timestamp: new Date().toLocaleString('pl-PL'),
-                user: currentUser,
-                client: document.getElementById('containerClientSelect').value,
-                issuedContainers: document.getElementById('issuedContainers').value,
-                issuedExtensions: document.getElementById('issuedExtensions').value,
-                returnedContainers: document.getElementById('returnedContainers').value,
-                returnedExtensions: document.getElementById('returnedExtensions').value
-            });
             try {
-                await fetch(CONFIG.SHEET_URL + '?' + params.toString(), { method: 'GET', redirect: 'follow' });
+                await apiGet({
+                    module: 'containers',
+                    timestamp: new Date().toLocaleString('pl-PL'),
+                    client: document.getElementById('containerClientSelect').value,
+                    issuedContainers: document.getElementById('issuedContainers').value,
+                    issuedExtensions: document.getElementById('issuedExtensions').value,
+                    returnedContainers: document.getElementById('returnedContainers').value,
+                    returnedExtensions: document.getElementById('returnedExtensions').value
+                });
                 document.getElementById('containersModule').classList.remove('hidden');
                 containerShowScreen('containerScreen4');
                 document.getElementById('loadingScreen').classList.add('hidden');
@@ -1160,15 +1281,13 @@
             submitBtn.disabled = true;
             hideAllScreens();
             document.getElementById('loadingScreen').classList.remove('hidden');
-            const params = new URLSearchParams({
-                module: 'sales',
-                timestamp: new Date().toLocaleString('pl-PL'),
-                user: currentUser,
-                client: client,
-                description: description
-            });
             try {
-                await fetch(CONFIG.SHEET_URL + '?' + params.toString(), { method: 'GET', redirect: 'follow' });
+                await apiGet({
+                    module: 'sales',
+                    timestamp: new Date().toLocaleString('pl-PL'),
+                    client: client,
+                    description: description
+                });
                 document.getElementById('salesModule').classList.remove('hidden');
                 document.getElementById('loadingScreen').classList.add('hidden');
                 messageDiv.className = 'alert alert-success';
@@ -1200,15 +1319,13 @@
             submitBtn.disabled = true;
             hideAllScreens();
             document.getElementById('loadingScreen').classList.remove('hidden');
-            const params = new URLSearchParams({
-                module: 'complaints',
-                timestamp: new Date().toLocaleString('pl-PL'),
-                user: currentUser,
-                client: client,
-                description: description
-            });
             try {
-                await fetch(CONFIG.SHEET_URL + '?' + params.toString(), { method: 'GET', redirect: 'follow' });
+                await apiGet({
+                    module: 'complaints',
+                    timestamp: new Date().toLocaleString('pl-PL'),
+                    client: client,
+                    description: description
+                });
                 document.getElementById('complaintsModule').classList.remove('hidden');
                 document.getElementById('loadingScreen').classList.add('hidden');
                 messageDiv.className = 'alert alert-success';
@@ -1243,9 +1360,7 @@
             document.getElementById('balanceResults').classList.add('hidden');
             document.getElementById('balanceError').classList.add('hidden');
             try {
-                const params = new URLSearchParams({ action: 'getBalance', clientCode: clientCode });
-                const response = await fetch(CONFIG.SHEET_URL + '?' + params.toString(), { method: 'GET', redirect: 'follow' });
-                const result = await response.json();
+                const result = await apiGet({ action: 'getBalance', clientCode: clientCode });
                 document.getElementById('balanceLoading').classList.add('hidden');
                 if (result.status === 'success') {
                     const data = result.data;
@@ -1324,15 +1439,13 @@
             submitBtn.disabled = true;
             hideAllScreens();
             document.getElementById('loadingScreen').classList.remove('hidden');
-            const params = new URLSearchParams({
-                module: 'notes',
-                timestamp: new Date().toLocaleString('pl-PL'),
-                user: currentUser,
-                client: client || 'Ogólna',
-                description: description
-            });
             try {
-                await fetch(CONFIG.SHEET_URL + '?' + params.toString(), { method: 'GET', redirect: 'follow' });
+                await apiGet({
+                    module: 'notes',
+                    timestamp: new Date().toLocaleString('pl-PL'),
+                    client: client || 'Ogólna',
+                    description: description
+                });
                 document.getElementById('notesModule').classList.remove('hidden');
                 document.getElementById('loadingScreen').classList.add('hidden');
                 messageDiv.className = 'alert alert-success';
@@ -1386,9 +1499,9 @@
         function deliveryStatusLabel(status) {
             const map = {
                 AWAITING_RECEIPT: 'Oczekuje na przyjęcie',
-                RECEIVED_OK: 'Przyjęte OK',
-                RECEIPT_ISSUE: 'Zgłoszony błąd',
-                FINAL_CONFIRMED: 'Zatwierdzone'
+                RECEIVED_OK: 'Przyjęta, oczekuje na finalizację',
+                RECEIPT_ISSUE: 'Zgłoszono problem',
+                FINAL_CONFIRMED: 'Finalnie zatwierdzona'
             };
             return map[status] || status;
         }
@@ -1412,7 +1525,6 @@
                 const result = await apiGet({
                     module: 'deliveries',
                     deliveriesAction: 'pendingCount',
-                    user: currentUser
                 });
                 if (result.status === 'success' && result.data) {
                     badge.textContent = result.data.count;
@@ -1431,10 +1543,12 @@
 
         function setDeliveriesScope(scope) {
             deliveriesScope = scope;
-            ['scopePendingBtn', 'scopeAwaitingAdminBtn', 'scopeAllBtn'].forEach(id => {
-                document.getElementById(id).classList.remove('active');
+            ['scopePendingBtn', 'scopeProblemsBtn', 'scopeAwaitingAdminBtn', 'scopeAllBtn'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('active');
             });
             if (scope === 'pending') document.getElementById('scopePendingBtn').classList.add('active');
+            if (scope === 'problems') document.getElementById('scopeProblemsBtn').classList.add('active');
             if (scope === 'awaitingAdmin') document.getElementById('scopeAwaitingAdminBtn').classList.add('active');
             if (scope === 'all') document.getElementById('scopeAllBtn').classList.add('active');
             loadDeliveriesList();
@@ -1464,7 +1578,6 @@
                 const result = await apiGet({
                     module: 'deliveries',
                     deliveriesAction: 'list',
-                    user: currentUser,
                     scope: scope
                 });
                 if (result.status !== 'success') {
@@ -1516,7 +1629,6 @@
                 const result = await apiGet({
                     module: 'deliveries',
                     deliveriesAction: 'get',
-                    user: currentUser,
                     id: id
                 });
                 if (result.status !== 'success') {
@@ -1551,29 +1663,54 @@
                 });
             }
 
+            const issueBanner = document.getElementById('deliveryIssueBanner');
+            if (delivery.status === 'RECEIPT_ISSUE' && delivery.issueComment) {
+                issueBanner.innerHTML =
+                    '<strong>Problem zgłoszony przez pracownika:</strong>' +
+                    escapeHtml(delivery.issueComment);
+                issueBanner.classList.remove('hidden');
+            } else {
+                issueBanner.classList.add('hidden');
+                issueBanner.innerHTML = '';
+            }
+
             const receiptInfo = document.getElementById('detailReceiptInfo');
-            if (delivery.receiptBy || delivery.issueComment || delivery.adminBy || delivery.adminNote) {
+            if (delivery.receiptBy || delivery.receiptAt || delivery.issueComment ||
+                delivery.adminBy || delivery.adminAt || delivery.adminNote) {
                 let html = '';
                 if (delivery.receiptBy) {
-                    html += `<div class="summary-item"><span class="summary-label">Przyjął:</span><span class="summary-value">${escapeHtml(delivery.receiptBy)}</span></div>`;
+                    html += `<div class="summary-item"><span class="summary-label">ReceiptBy:</span><span class="summary-value">${escapeHtml(delivery.receiptBy)}</span></div>`;
                 }
                 if (delivery.receiptAt) {
-                    html += `<div class="summary-item"><span class="summary-label">Kiedy:</span><span class="summary-value">${escapeHtml(delivery.receiptAt)}</span></div>`;
+                    html += `<div class="summary-item"><span class="summary-label">ReceiptAt:</span><span class="summary-value">${escapeHtml(delivery.receiptAt)}</span></div>`;
                 }
-                if (delivery.issueComment) {
-                    html += `<div class="summary-item"><span class="summary-label">Komentarz:</span><span class="summary-value">${escapeHtml(delivery.issueComment)}</span></div>`;
-                }
-                if (delivery.adminNote) {
-                    html += `<div class="summary-item"><span class="summary-label">Notatka admina:</span><span class="summary-value">${escapeHtml(delivery.adminNote)}</span></div>`;
+                if (delivery.issueComment && delivery.status !== 'RECEIPT_ISSUE') {
+                    html += `<div class="summary-item"><span class="summary-label">IssueComment:</span><span class="summary-value">${escapeHtml(delivery.issueComment)}</span></div>`;
                 }
                 if (delivery.adminBy) {
-                    html += `<div class="summary-item"><span class="summary-label">Finalne OK:</span><span class="summary-value">${escapeHtml(delivery.adminBy)} (${escapeHtml(delivery.adminAt || '')})</span></div>`;
+                    html += `<div class="summary-item"><span class="summary-label">AdminBy:</span><span class="summary-value">${escapeHtml(delivery.adminBy)}</span></div>`;
+                }
+                if (delivery.adminAt) {
+                    html += `<div class="summary-item"><span class="summary-label">AdminAt:</span><span class="summary-value">${escapeHtml(delivery.adminAt)}</span></div>`;
+                }
+                if (delivery.adminNote) {
+                    html += `<div class="summary-item"><span class="summary-label">NotatkaAdmin:</span><span class="summary-value">${escapeHtml(delivery.adminNote)}</span></div>`;
                 }
                 receiptInfo.innerHTML = html;
                 receiptInfo.classList.remove('hidden');
             } else {
                 receiptInfo.classList.add('hidden');
                 receiptInfo.innerHTML = '';
+            }
+
+            const adminNotePanel = document.getElementById('deliveryAdminNotePanel');
+            const adminNoteInput = document.getElementById('deliveryAdminNoteInput');
+            if (isDeliveriesAdmin() && delivery.status !== 'AWAITING_RECEIPT') {
+                adminNotePanel.classList.remove('hidden');
+                adminNoteInput.value = delivery.adminNote || '';
+            } else {
+                adminNotePanel.classList.add('hidden');
+                adminNoteInput.value = '';
             }
 
             const actions = document.getElementById('deliveryActions');
@@ -1602,6 +1739,35 @@
             }
         }
 
+        async function saveDeliveryAdminNote() {
+            if (!currentDeliveryId || !isDeliveriesAdmin()) return;
+            const note = document.getElementById('deliveryAdminNoteInput').value.trim();
+            if (!note) {
+                showDeliveryDetailMessage('Wpisz notatkę admina', true);
+                return;
+            }
+            const btn = document.getElementById('saveAdminNoteBtn');
+            btn.disabled = true;
+            try {
+                const result = await apiGet({
+                    module: 'deliveries',
+                    deliveriesAction: 'saveAdminNote',
+                    id: currentDeliveryId,
+                    note: note
+                });
+                if (result.status === 'success') {
+                    await openDeliveryDetail(currentDeliveryId);
+                    showDeliveryDetailMessage('✓ Notatka admina zapisana', false);
+                } else {
+                    showDeliveryDetailMessage(result.message || 'Nie udało się zapisać notatki', true);
+                }
+            } catch (e) {
+                showDeliveryDetailMessage('Błąd połączenia podczas zapisu notatki', true);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
         function showDeliveryDetailMessage(text, isError) {
             const messageDiv = document.getElementById('deliveryDetailMessage');
             messageDiv.className = isError ? 'alert alert-error' : 'alert alert-success';
@@ -1627,7 +1793,6 @@
                 const result = await apiGet({
                     module: 'deliveries',
                     deliveriesAction: 'confirmOk',
-                    user: currentUser,
                     id: currentDeliveryId
                 });
                 document.getElementById('deliveriesModule').classList.remove('hidden');
@@ -1663,7 +1828,6 @@
                 const result = await apiGet({
                     module: 'deliveries',
                     deliveriesAction: 'reportIssue',
-                    user: currentUser,
                     id: currentDeliveryId,
                     comment: comment
                 });
@@ -1697,7 +1861,6 @@
                 const result = await apiGet({
                     module: 'deliveries',
                     deliveriesAction: 'adminConfirm',
-                    user: currentUser,
                     id: currentDeliveryId
                 });
                 document.getElementById('deliveriesModule').classList.remove('hidden');
@@ -1817,7 +1980,6 @@
                 const result = await apiGet({
                     module: 'deliveries',
                     deliveriesAction: 'create',
-                    user: currentUser,
                     deliveryDate: deliveryDate,
                     supplier: supplier,
                     adminNote: adminNote,
